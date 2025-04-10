@@ -45,7 +45,6 @@ func StartServer() {
 		api.GET("/auth-bindings/:app_id", handler.GetAuthBindingsByAppID)
 
 		// application collaborations
-		// Add these lines in your router setup
 		api.POST("/application-collaborators", handler.CreateApplicationCollaborator)
 		api.GET("/application-collaborators/:application_id", handler.GetApplicationCollaborators)
 
