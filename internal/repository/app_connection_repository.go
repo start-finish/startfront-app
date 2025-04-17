@@ -4,18 +4,19 @@ import (
 	"startfront-backend/internal/domain"
 )
 
-func InsertAppConnection(c domain.AppConnection) error {
+// Insert a new App Connection
+func InsertAppConnection(connection domain.AppConnection) error {
 	query := `
 		INSERT INTO app_connections (application_id, name, type, config)
 		VALUES ($1, $2, $3, $4)
 	`
-	_, err := db.Exec(query, c.ApplicationID, c.Name, c.Type, c.Config)
+	_, err := db.Exec(query, connection.ApplicationID, connection.Name, connection.Type, connection.Config)
 	return err
 }
 
-func GetAppConnectionsByAppID(appID int) ([]domain.AppConnection, error) {
+// Get App Connections by Application ID
+func GetAppConnectionsByApplicationID(appID int) ([]domain.AppConnection, error) {
 	var connections []domain.AppConnection
-	query := `SELECT * FROM app_connections WHERE application_id = $1`
-	err := db.Select(&connections, query, appID)
+	err := db.Select(&connections, `SELECT * FROM app_connections WHERE application_id = $1`, appID)
 	return connections, err
 }

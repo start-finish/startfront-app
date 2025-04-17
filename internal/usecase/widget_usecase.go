@@ -5,10 +5,22 @@ import (
 	"startfront-backend/internal/repository"
 )
 
-func CreateWidget(w domain.Widget) error {
-	return repository.InsertWidget(w)
+// CreateWidget creates a new widget
+func CreateWidget(widget domain.Widget) error {
+	return repository.InsertWidget(widget)
 }
 
-func GetWidgets(screenID int) ([]domain.Widget, error) {
+// GetWidgetsByScreenID fetches widgets by screen ID
+func GetWidgetsByScreenID(screenID string) ([]domain.Widget, error) {
 	return repository.GetWidgetsByScreenID(screenID)
+}
+
+// UpdateWidget updates widget details
+func UpdateWidget(id string, widget domain.Widget) error {
+	return repository.UpdateWidget(id, widget)
+}
+
+// DeleteWidget deletes a widget
+func DeleteWidget(id string) error {
+	return repository.DeleteWidget(id)
 }

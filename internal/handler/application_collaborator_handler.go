@@ -25,6 +25,7 @@ func CreateApplicationCollaborator(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "Collaborator added successfully"})
 }
 
+// GetApplicationCollaborators retrieves all collaborators for a given application
 func GetApplicationCollaborators(c *gin.Context) {
 	appIDStr := c.Param("application_id")
 	appID, err := strconv.Atoi(appIDStr)
@@ -33,6 +34,7 @@ func GetApplicationCollaborators(c *gin.Context) {
 		return
 	}
 
+	// Call usecase to fetch collaborators
 	collaborators, err := usecase.ListApplicationCollaborators(appID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 1, "message": "Failed to fetch collaborators"})

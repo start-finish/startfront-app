@@ -5,10 +5,12 @@ import (
 	"startfront-backend/internal/repository"
 )
 
-func CreateAppConnection(c domain.AppConnection) error {
-	return repository.InsertAppConnection(c)
+// CreateAppConnection creates an app connection
+func CreateAppConnection(connection domain.AppConnection) error {
+	return repository.InsertAppConnection(connection)
 }
 
+// ListAppConnectionsByAppID gets app connections by application ID
 func ListAppConnectionsByAppID(appID int) ([]domain.AppConnection, error) {
-	return repository.GetAppConnectionsByAppID(appID)
+	return repository.GetAppConnectionsByApplicationID(appID)
 }

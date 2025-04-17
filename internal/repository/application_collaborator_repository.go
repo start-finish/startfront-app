@@ -1,21 +1,36 @@
 package repository
 
 import (
+	"errors"
 	"startfront-backend/internal/domain"
 )
 
-func InsertApplicationCollaborator(c domain.ApplicationCollaborator) error {
+// Insert a new Application Collaborator
+func InsertApplicationCollaborator(collaborator domain.ApplicationCollaborator) error {
 	query := `
 		INSERT INTO application_collaborators (application_id, user_id, role)
 		VALUES ($1, $2, $3)
 	`
-	_, err := db.Exec(query, c.ApplicationID, c.UserID, c.Role)
+	_, err := db.Exec(query, collaborator.ApplicationID, collaborator.UserID, collaborator.Role)
 	return err
 }
 
-func GetCollaboratorsByAppID(appID int) ([]domain.ApplicationCollaborator, error) {
+// GetApplicationCollaboratorsByApplicationID fetches collaborators based on application ID
+func GetApplicationCollaboratorsByApplicationID(applicationID int) ([]domain.ApplicationCollaborator, error) {
 	var collaborators []domain.ApplicationCollaborator
-	query := `SELECT * FROM application_collaborators WHERE application_id = $1`
-	err := db.Select(&collaborators, query, appID)
-	return collaborators, err
+	err := db.Select(&collaborators, `SELECT * FROM application_collaborators WHERE application_id = $1`, applicationID)
+	if err != nil {
+		return nil, errors.New("could not fetch collaborators")
+	}
+	return collaborators, nil
+}
+
+// ListApplicationCollaborators retrieves all collaborators for a specific application
+func ListApplicationCollaborators(applicationID int) ([]domain.ApplicationCollaborator, error) {
+	// Call repository to get collaborators based on applicationID
+	collaborators, err := GetApplicationCollaboratorsByApplicationID(applicationID)
+	if err != nil {
+		return nil, errors.New("unable to fetch collaborators")
+	}
+	return collaborators, nil
 }

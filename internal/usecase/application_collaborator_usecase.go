@@ -5,10 +5,12 @@ import (
 	"startfront-backend/internal/repository"
 )
 
-func CreateApplicationCollaborator(c domain.ApplicationCollaborator) error {
-	return repository.InsertApplicationCollaborator(c)
+// CreateApplicationCollaborator creates a new application collaborator
+func CreateApplicationCollaborator(collaborator domain.ApplicationCollaborator) error {
+	return repository.InsertApplicationCollaborator(collaborator)
 }
 
-func ListApplicationCollaborators(appID int) ([]domain.ApplicationCollaborator, error) {
-	return repository.GetCollaboratorsByAppID(appID)
+// ListApplicationCollaborators retrieves all collaborators for a given application
+func ListApplicationCollaborators(applicationID int) ([]domain.ApplicationCollaborator, error) {
+	return repository.GetApplicationCollaboratorsByApplicationID(applicationID)
 }

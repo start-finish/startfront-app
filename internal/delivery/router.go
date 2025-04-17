@@ -1,54 +1,61 @@
 package delivery
 
 import (
-	"startfront-backend/internal/handler"
-
 	"github.com/gin-gonic/gin"
+	"startfront-backend/internal/handler"
 )
 
 func StartServer() {
 	r := gin.Default()
 
+	// API group for WebSocket and HTTP routes
 	api := r.Group("/api")
 	{
-		// user
+		// WebSocket handler for real-time updates
+		api.GET("/ws", handler.WebSocketHandlerGin)
+
+		// Users routes
 		api.POST("/users", handler.CreateUser)
 		api.GET("/users/:id", handler.GetUser)
+		api.PUT("/users/:id", handler.UpdateUser)
+		api.DELETE("/users/:id", handler.DeleteUser)
 
-		// applications
+		// Applications routes
 		api.POST("/applications", handler.CreateApplication)
 		api.GET("/applications", handler.ListApplications)
 		api.GET("/application/:code", handler.GetApplication)
+		api.PUT("/application/:code", handler.UpdateApplication)
+		api.DELETE("/application/:code", handler.DeleteApplication)
 
-		// screens
+		// Screens routes
 		api.POST("/screens", handler.CreateScreen)
 		api.GET("/screens/:code", handler.GetScreensByAppCode)
+		api.PUT("/screens/:code", handler.UpdateScreen)
+		api.DELETE("/screens/:code", handler.DeleteScreen)
 
-		// widgets
+		// Widgets routes
 		api.POST("/widgets", handler.CreateWidget)
 		api.GET("/widgets/:screen_id", handler.GetWidgetsByScreenID)
+		api.PUT("/widgets/:id", handler.UpdateWidget)
+		api.DELETE("/widgets/:id", handler.DeleteWidget)
 
-		// widget_presets
+		// Widget Presets routes
 		api.POST("/widget-presets", handler.CreateWidgetPreset)
 		api.GET("/widget-presets", handler.GetWidgetPresets)
 
-		// app_connection
+		// App Connections routes
 		api.POST("/app-connections", handler.CreateAppConnection)
 		api.GET("/app-connections/:application_id", handler.GetAppConnectionsByAppID)
 
-		// widget_bindings
+		// Widget Bindings routes
 		api.POST("/widget-bindings", handler.CreateWidgetBinding)
 		api.GET("/widget-bindings/:widget_id", handler.GetWidgetBindings)
 
-		// auth_bindings
-		api.POST("/auth-bindings", handler.CreateAuthBinding)
-		api.GET("/auth-bindings/:app_id", handler.GetAuthBindingsByAppID)
-
-		// application collaborations
+		// Application Collaborators routes
 		api.POST("/application-collaborators", handler.CreateApplicationCollaborator)
 		api.GET("/application-collaborators/:application_id", handler.GetApplicationCollaborators)
-
 	}
 
+	// Start the HTTP server
 	r.Run(":8080")
 }

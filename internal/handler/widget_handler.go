@@ -1,15 +1,13 @@
 package handler
 
 import (
-	"strconv"
-
+	"github.com/gin-gonic/gin"
 	"startfront-backend/internal/domain"
 	"startfront-backend/internal/usecase"
 	"startfront-backend/pkg/response"
-
-	"github.com/gin-gonic/gin"
 )
 
+// CreateWidget handles the creation of a new widget
 func CreateWidget(c *gin.Context) {
 	var widget domain.Widget
 	if err := c.ShouldBindJSON(&widget); err != nil {
@@ -17,27 +15,62 @@ func CreateWidget(c *gin.Context) {
 		return
 	}
 
-	if err := usecase.CreateWidget(widget); err != nil {
-		response.Error(c, "Failed to create widget: "+err.Error())
+	err := usecase.CreateWidget(widget)
+	if err != nil {
+		response.Error(c, "Failed to create widget")
 		return
 	}
+
+	// Send WebSocket message
+	SendToClients("Widget created")
 
 	response.Success(c, gin.H{"message": "Widget created successfully"})
 }
 
+// GetWidgetsByScreenID fetches widgets by screen ID
 func GetWidgetsByScreenID(c *gin.Context) {
-	idStr := c.Param("screen_id")
-	screenID, err := strconv.Atoi(idStr)
-	if err != nil {
-		response.Error(c, "Invalid screen_id")
-		return
-	}
-
-	widgets, err := usecase.GetWidgets(screenID)
+	screenID := c.Param("screen_id")
+	widgets, err := usecase.GetWidgetsByScreenID(screenID)
 	if err != nil {
 		response.Error(c, "Failed to fetch widgets")
 		return
 	}
 
 	response.Success(c, gin.H{"widgets": widgets})
+}
+
+// UpdateWidget updates widget details
+func UpdateWidget(c *gin.Context) {
+	id := c.Param("id")
+	var widget domain.Widget
+	if err := c.ShouldBindJSON(&widget); err != nil {
+		response.Error(c, "Invalid request payload")
+		return
+	}
+
+	err := usecase.UpdateWidget(id, widget)
+	if err != nil {
+		response.Error(c, "Failed to update widget")
+		return
+	}
+
+	// Send WebSocket message
+	SendToClients("Widget updated")
+
+	response.Success(c, gin.H{"message": "Widget updated successfully"})
+}
+
+// DeleteWidget deletes a widget
+func DeleteWidget(c *gin.Context) {
+	id := c.Param("id")
+	err := usecase.DeleteWidget(id)
+	if err != nil {
+		response.Error(c, "Failed to delete widget")
+		return
+	}
+
+	// Send WebSocket message
+	SendToClients("Widget deleted")
+
+	response.Success(c, gin.H{"message": "Widget deleted successfully"})
 }
