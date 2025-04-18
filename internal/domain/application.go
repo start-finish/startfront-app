@@ -8,5 +8,4 @@ type Application struct {
 	Description string `db:"description" json:"description"`
 	CreatedBy   *int   `db:"created_by" json:"created_by"`
 	AuthBy      *int   `db:"auth_by" json:"auth_by"`
-	CreatedAt   string `db:"created_at" json:"created_at"`
 }

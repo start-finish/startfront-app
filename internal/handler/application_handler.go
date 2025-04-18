@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
 	"startfront-backend/internal/domain"
 	"startfront-backend/internal/usecase"
 	"startfront-backend/pkg/response"
+
+	"github.com/gin-gonic/gin"
 )
 
 // CreateApplication handles the creation of a new application
@@ -17,7 +18,11 @@ func CreateApplication(c *gin.Context) {
 
 	err := usecase.CreateApplication(app)
 	if err != nil {
-		response.Error(c, "Failed to create application")
+		if err.Error() == "duplicate_found" {
+			response.Error(c, "Duplicate code or route found")
+		} else {
+			response.Error(c, "Failed to create application")
+		}
 		return
 	}
 

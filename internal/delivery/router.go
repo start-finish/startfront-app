@@ -1,8 +1,10 @@
 package delivery
 
 import (
-	"github.com/gin-gonic/gin"
 	"startfront-backend/internal/handler"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func StartServer() {
@@ -13,6 +15,11 @@ func StartServer() {
 	{
 		// WebSocket handler for real-time updates
 		api.GET("/ws", handler.WebSocketHandlerGin)
+
+		go func() {
+			time.Sleep(2 * time.Second) // wait a bit for clients to reconnect
+			handler.SendToClients("🔄 Server restarted, welcome back!")
+		}()
 
 		// Users routes
 		api.POST("/users", handler.CreateUser)

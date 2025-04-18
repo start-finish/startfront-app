@@ -10,5 +10,4 @@ type Screen struct {
 	Params      string `db:"params" json:"params"`
 	Validate    string `db:"validate" json:"validate"`
 	AuthBy      *int   `db:"auth_by" json:"auth_by"`
-	CreatedAt   string `db:"created_at" json:"created_at"`
 }

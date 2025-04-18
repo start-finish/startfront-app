@@ -6,5 +6,4 @@ type AppConnection struct {
 	Name          string `db:"name" json:"name"`
 	Type          string `db:"type" json:"type"`
 	Config        string `db:"config" json:"config"`
-	CreatedAt     string `db:"created_at" json:"created_at"`
 }

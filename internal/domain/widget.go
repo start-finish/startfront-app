@@ -8,5 +8,4 @@ type Widget struct {
 	Props      string `db:"props" json:"props"`
 	ChildIndex *int   `db:"child_index" json:"child_index"`
 	AuthBy     *int   `db:"auth_by" json:"auth_by"`
-	CreatedAt  string `db:"created_at" json:"created_at"`
 }
