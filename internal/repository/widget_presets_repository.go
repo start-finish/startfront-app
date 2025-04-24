@@ -7,10 +7,10 @@ import (
 // Insert a new Widget Preset
 func InsertWidgetPreset(preset domain.WidgetPreset) error {
 	query := `
-		INSERT INTO widget_presets (name, type, props, created_by)
+		INSERT INTO widget_presets (name, type, props, auth_by)
 		VALUES ($1, $2, $3, $4)
 	`
-	_, err := db.Exec(query, preset.Name, preset.Type, preset.Props, preset.CreatedBy)
+	_, err := db.Exec(query, preset.Name, preset.Type, preset.Props, preset.AuthBy)
 	return err
 }
 

@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
 	"startfront-backend/internal/domain"
 	"startfront-backend/internal/usecase"
 	"startfront-backend/pkg/response"
+
+	"github.com/gin-gonic/gin"
 )
 
 // CreateScreen handles the creation of a new screen
@@ -17,38 +18,49 @@ func CreateScreen(c *gin.Context) {
 
 	err := usecase.CreateScreen(screen)
 	if err != nil {
-		response.Error(c, "Failed to create screen")
+		if err.Error() == "duplicate_found" {
+			response.Error(c, "Duplicate code or route found")
+		} else {
+			response.Error(c, "Failed to create screen")
+		}
 		return
 	}
 
 	// Send WebSocket message
 	SendToClients("New screen created")
 
-	response.Success(c, gin.H{"message": "Screen created successfully"})
+	response.Success(c, "Screen created successfully", nil)
 }
 
-// GetScreensByAppCode fetches screens by application code
-func GetScreensByAppCode(c *gin.Context) {
-	code := c.Param("code")
-	screens, err := usecase.GetScreensByAppCode(code)
+// GetScreensById fetches screens by application code
+func GetScreensById(c *gin.Context) {
+	id := c.Param("id")
+	screens, err := usecase.GetScreensById(id)
 	if err != nil {
-		response.Error(c, "Failed to fetch screens")
+		response.Error(c, "Screen not found")
 		return
 	}
 
-	response.Success(c, gin.H{"screens": screens})
+	response.Success(c, "", gin.H{"screens": screens})
 }
 
 // UpdateScreen updates a screen
 func UpdateScreen(c *gin.Context) {
-	code := c.Param("code")
+	id := c.Param("id")
 	var screen domain.Screen
+
+	_, err := usecase.GetScreensById(id)
+	if err != nil {
+		response.Error(c, "Screen not found")
+		return
+	}
+
 	if err := c.ShouldBindJSON(&screen); err != nil {
 		response.Error(c, "Invalid request payload")
 		return
 	}
 
-	err := usecase.UpdateScreen(code, screen)
+	err = usecase.UpdateScreen(id, screen)
 	if err != nil {
 		response.Error(c, "Failed to update screen")
 		return
@@ -57,13 +69,21 @@ func UpdateScreen(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("Screen updated")
 
-	response.Success(c, gin.H{"message": "Screen updated successfully"})
+	response.Success(c, "Screen updated successfully", nil)
 }
 
 // DeleteScreen deletes a screen
 func DeleteScreen(c *gin.Context) {
-	code := c.Param("code")
-	err := usecase.DeleteScreen(code)
+	id := c.Param("id")
+
+	_, err := usecase.GetScreensById(id)
+	if err != nil {
+		response.Error(c, "Screen not found")
+		return
+	}
+
+	// Proceed with deletion if the screen exists
+	err = usecase.DeleteScreen(id)
 	if err != nil {
 		response.Error(c, "Failed to delete screen")
 		return
@@ -72,5 +92,19 @@ func DeleteScreen(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("Screen deleted")
 
-	response.Success(c, gin.H{"message": "Screen deleted successfully"})
+	// Return success response
+	response.Success(c, "Screen deleted successfully", nil)
+}
+
+// ListScreens retrieves all Screens
+func ListScreens(c *gin.Context) {
+	screen, err := usecase.ListScreens()
+	if err != nil {
+		response.Error(c, "Failed to fetch Screens")
+		return
+	}
+
+	response.Success(c, "", gin.H{
+		"Screens": screen,
+	})
 }

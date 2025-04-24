@@ -6,6 +6,6 @@ type Application struct {
 	Code        string `db:"code" json:"code"`
 	Route       string `db:"route" json:"route"`
 	Description string `db:"description" json:"description"`
-	CreatedBy   *int   `db:"created_by" json:"created_by"`
 	AuthBy      *int   `db:"auth_by" json:"auth_by"`
+	AuthByName  string `json:"auth_name"`
 }

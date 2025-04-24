@@ -10,17 +10,22 @@ func CreateScreen(screen domain.Screen) error {
 	return repository.InsertScreen(screen)
 }
 
-// GetScreensByAppCode fetches screens by application code
-func GetScreensByAppCode(code string) ([]domain.Screen, error) {
-	return repository.GetScreensByAppCode(code)
+// GetScreensById fetches screens by application code
+func GetScreensById(id string) (domain.Screen, error) {
+	return repository.GetScreensById(id)
+}
+
+// ListScreens lists all Screens
+func ListScreens() ([]domain.Screen, error) {
+	return repository.GetAllScreens()
 }
 
 // UpdateScreen updates screen details
-func UpdateScreen(code string, screen domain.Screen) error {
-	return repository.UpdateScreen(code, screen)
+func UpdateScreen(id string, screen domain.Screen) error {
+	return repository.UpdateScreen(id, screen)
 }
 
 // DeleteScreen deletes a screen
-func DeleteScreen(code string) error {
-	return repository.DeleteScreen(code)
+func DeleteScreen(id string) error {
+	return repository.DeleteScreen(id)
 }

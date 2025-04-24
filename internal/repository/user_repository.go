@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"startfront-backend/internal/domain"
@@ -48,4 +49,20 @@ func UpdateUser(id string, user domain.User) error {
 func DeleteUser(id string) error {
 	_, err := db.DB.Exec("DELETE FROM users WHERE id = $1", id)
 	return err
+}
+
+// GetUserNameByID fetches the username for a given user ID
+func GetUserNameByID(userID *int) (string, error) {
+	if userID == nil {
+		return "", nil
+	}
+
+	var username string
+	query := "SELECT name FROM users WHERE id = $1"
+	err := db.DB.QueryRow(query, *userID).Scan(&username)
+	if err != nil && err != sql.ErrNoRows {
+		log.Println("Error fetching username:", err)
+		return "", fmt.Errorf("failed to fetch username")
+	}
+	return username, nil
 }

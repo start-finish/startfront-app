@@ -24,7 +24,7 @@ func CreateWidget(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("Widget created")
 
-	response.Success(c, gin.H{"message": "Widget created successfully"})
+	response.Success(c, "Widget created successfully", nil)
 }
 
 // GetWidgetsByScreenID fetches widgets by screen ID
@@ -36,7 +36,7 @@ func GetWidgetsByScreenID(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{"widgets": widgets})
+	response.Success(c, "", gin.H{"widgets": widgets})
 }
 
 // UpdateWidget updates widget details
@@ -57,7 +57,7 @@ func UpdateWidget(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("Widget updated")
 
-	response.Success(c, gin.H{"message": "Widget updated successfully"})
+	response.Success(c, "Widget updated successfully", nil)
 }
 
 // DeleteWidget deletes a widget
@@ -72,5 +72,5 @@ func DeleteWidget(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("Widget deleted")
 
-	response.Success(c, gin.H{"message": "Widget deleted successfully"})
+	response.Success(c, "Widget deleted successfully", nil)
 }

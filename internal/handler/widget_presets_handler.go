@@ -21,7 +21,7 @@ func CreateWidgetPreset(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{"message": "Widget preset created successfully"})
+	response.Success(c, "Widget preset created successfully", nil)
 }
 
 func GetWidgetPresets(c *gin.Context) {
@@ -31,5 +31,7 @@ func GetWidgetPresets(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{"data": presets})
+	response.Success(c, "", gin.H{"data": presets})
 }
+
+// todo: change get by code ==> get by id

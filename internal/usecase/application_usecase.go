@@ -11,8 +11,8 @@ func CreateApplication(application domain.Application) error {
 }
 
 // GetApplication fetches application details by code
-func GetApplication(code string) (domain.Application, error) {
-	return repository.GetApplication(code)
+func GetApplication(id string) (domain.Application, error) {
+	return repository.GetApplicationById(id)
 }
 
 // ListApplications lists all applications
@@ -21,11 +21,11 @@ func ListApplications() ([]domain.Application, error) {
 }
 
 // UpdateApplication updates application details
-func UpdateApplication(code string, application domain.Application) error {
-	return repository.UpdateApplication(code, application)
+func UpdateApplication(id string, application domain.Application) error {
+	return repository.UpdateApplication(id, application)
 }
 
 // DeleteApplication deletes an application
-func DeleteApplication(code string) error {
-	return repository.DeleteApplication(code)
+func DeleteApplication(id string) error {
+	return repository.DeleteApplication(id)
 }

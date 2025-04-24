@@ -29,31 +29,39 @@ func CreateApplication(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("New application created")
 
-	response.Success(c, gin.H{"message": "Application created successfully"})
+	response.Success(c, "Application created successfully", nil)
 }
 
 // GetApplication fetches application details by code
 func GetApplication(c *gin.Context) {
-	code := c.Param("code")
-	app, err := usecase.GetApplication(code)
+	id := c.Param("id")
+
+	app, err := usecase.GetApplication(id)
 	if err != nil {
-		response.Error(c, "Failed to fetch application")
+		response.Error(c, "Application not found")
 		return
 	}
 
-	response.Success(c, gin.H{"application": app})
+	response.Success(c, "", gin.H{"application": app})
 }
 
 // UpdateApplication updates application details
 func UpdateApplication(c *gin.Context) {
-	code := c.Param("code")
+	id := c.Param("id")
 	var app domain.Application
+
+	_, err := usecase.GetApplication(id)
+	if err != nil {
+		response.Error(c, "Application not found")
+		return
+	}
+
 	if err := c.ShouldBindJSON(&app); err != nil {
 		response.Error(c, "Invalid request payload")
 		return
 	}
 
-	err := usecase.UpdateApplication(code, app)
+	err = usecase.UpdateApplication(id, app)
 	if err != nil {
 		response.Error(c, "Failed to update application")
 		return
@@ -62,13 +70,20 @@ func UpdateApplication(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("Application updated")
 
-	response.Success(c, gin.H{"message": "Application updated successfully"})
+	response.Success(c, "Application updated successfully", nil)
 }
 
 // DeleteApplication deletes an application
 func DeleteApplication(c *gin.Context) {
-	code := c.Param("code")
-	err := usecase.DeleteApplication(code)
+	id := c.Param("id")
+
+	_, err := usecase.GetApplication(id)
+	if err != nil {
+		response.Error(c, "Application not found")
+		return
+	}
+
+	err = usecase.DeleteApplication(id)
 	if err != nil {
 		response.Error(c, "Failed to delete application")
 		return
@@ -77,7 +92,7 @@ func DeleteApplication(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("Application deleted")
 
-	response.Success(c, gin.H{"message": "Application deleted successfully"})
+	response.Success(c, "Application deleted successfully", nil)
 }
 
 // ListApplications retrieves all applications
@@ -88,8 +103,7 @@ func ListApplications(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{
-		"message": "Applications retrieved successfully",
-		"data":    applications,
+	response.Success(c, "", gin.H{
+		"applications": applications,
 	})
 }

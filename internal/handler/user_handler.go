@@ -31,7 +31,7 @@ func CreateUser(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("New user created")
 
-	response.Success(c, gin.H{"message": "User created successfully"})
+	response.Success(c, "User created successfully", nil)
 }
 
 // GetUser fetches user details by ID
@@ -43,19 +43,26 @@ func GetUser(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{"user": user})
+	response.Success(c, "", gin.H{"user": user})
 }
 
 // UpdateUser updates user details
 func UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 	var user domain.User
+
+	_, err := usecase.GetUser(id)
+	if err != nil {
+		response.Error(c, "User not found")
+		return
+	}
+
 	if err := c.ShouldBindJSON(&user); err != nil {
 		response.Error(c, "Invalid request payload")
 		return
 	}
 
-	err := usecase.UpdateUser(id, user)
+	err = usecase.UpdateUser(id, user)
 	if err != nil {
 		response.Error(c, "Failed to update user")
 		return
@@ -64,13 +71,20 @@ func UpdateUser(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("User updated")
 
-	response.Success(c, gin.H{"message": "User updated successfully"})
+	response.Success(c, "User updated successfully", nil)
 }
 
 // DeleteUser deletes a user
 func DeleteUser(c *gin.Context) {
 	id := c.Param("id")
-	err := usecase.DeleteUser(id)
+
+	_, err := usecase.GetUser(id)
+	if err != nil {
+		response.Error(c, "User not found")
+		return
+	}
+
+	err = usecase.DeleteUser(id)
 	if err != nil {
 		response.Error(c, "Failed to delete user")
 		return
@@ -79,5 +93,5 @@ func DeleteUser(c *gin.Context) {
 	// Send WebSocket message
 	SendToClients("User deleted")
 
-	response.Success(c, gin.H{"message": "User deleted successfully"})
+	response.Success(c, "User deleted successfully", nil)
 }

@@ -30,15 +30,16 @@ func StartServer() {
 		// Applications routes
 		api.POST("/applications", handler.CreateApplication)
 		api.GET("/applications", handler.ListApplications)
-		api.GET("/application/:code", handler.GetApplication)
-		api.PUT("/application/:code", handler.UpdateApplication)
-		api.DELETE("/application/:code", handler.DeleteApplication)
+		api.GET("/application/:id", handler.GetApplication)
+		api.PUT("/application/:id", handler.UpdateApplication)
+		api.DELETE("/application/:id", handler.DeleteApplication)
 
 		// Screens routes
 		api.POST("/screens", handler.CreateScreen)
-		api.GET("/screens/:code", handler.GetScreensByAppCode)
-		api.PUT("/screens/:code", handler.UpdateScreen)
-		api.DELETE("/screens/:code", handler.DeleteScreen)
+		api.GET("/screens", handler.ListScreens)
+		api.GET("/screens/:id", handler.GetScreensById)
+		api.PUT("/screens/:id", handler.UpdateScreen)
+		api.DELETE("/screens/:id", handler.DeleteScreen)
 
 		// Widgets routes
 		api.POST("/widgets", handler.CreateWidget)

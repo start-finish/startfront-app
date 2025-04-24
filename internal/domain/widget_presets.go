@@ -5,5 +5,5 @@ type WidgetPreset struct {
 	Name      string `db:"name" json:"name"`
 	Type      string `db:"type" json:"type"`
 	Props     string `db:"props" json:"props"`
-	CreatedBy *int   `db:"created_by" json:"created_by"`
+	AuthBy *int   `db:"auth_by" json:"auth_by"`
 }

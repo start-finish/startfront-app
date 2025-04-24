@@ -21,7 +21,7 @@ func CreateWidgetBinding(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{"message": "Widget binding created successfully"})
+	response.Success(c, "Widget binding created successfully", nil)
 }
 
 func GetWidgetBindings(c *gin.Context) {
@@ -38,5 +38,5 @@ func GetWidgetBindings(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{"data": bindings})
+	response.Success(c, "", gin.H{"data": bindings})
 }

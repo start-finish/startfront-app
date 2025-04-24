@@ -8,11 +8,16 @@ type Response struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-func Success(c *gin.Context, data interface{}) {
+func Success(c *gin.Context, message string, data interface{}) {
+	// Default message to "success" if it's nil
+	if message == "" {
+		message = "success"
+	}
+
 	c.JSON(200, Response{
 		Code:    0,
-		Message: "success",
-		Data:    data,
+		Message: message,
+		Data:    data, // `data` will be nil if not needed
 	})
 }
 
