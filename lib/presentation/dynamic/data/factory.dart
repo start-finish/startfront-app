@@ -15,6 +15,7 @@ import '../component/padding_component.dart';
 import '../component/rotate_component.dart';
 import '../component/row_component.dart';
 import '../component/row_list_component.dart';
+import '../component/scroll_component.dart';
 import '../component/sizedbox_component.dart';
 import '../component/stack_component.dart';
 import '../component/text_component.dart';
@@ -41,6 +42,8 @@ class DynamicWidgetFactory {
         return paddingComponent(data: widgetData);
       case 'SizedBox':
         return sizedBoxComponent(data: widgetData);
+      case 'Scroll':
+        return scrollComponent(data: widgetData);
       case 'Expanded':
         return expandedComponent(data: widgetData);
       case 'Flexible':
