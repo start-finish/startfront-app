@@ -138,7 +138,8 @@ class LoginController extends GetxController {
               emailField,
               passwordField
                 ..properties['onSubmitted'] =
-                    (value) async => await fetchLogin(),
+                    (value) async => await Get.offAllNamed('/admin-dashboard'),
+              // (value) async => await fetchLogin(),
               DynamicWidgetData(type: 'SizedBox', properties: {'height': 8}),
               DynamicWidgetData(
                 type: 'Button',
@@ -148,7 +149,9 @@ class LoginController extends GetxController {
                   'titleColor': AppTheme.onPrimary,
                   'leadingIcon': Icons.login,
                   'leadingIconColor': AppTheme.onPrimary,
-                  'action': () async => await fetchLogin(),
+                  'action': () async =>
+                      await Get.offAllNamed('/admin-dashboard'),
+                  // 'action': () async => await fetchLogin(),
                 },
               ),
               DynamicWidgetData(type: 'SizedBox', properties: {'height': 2}),

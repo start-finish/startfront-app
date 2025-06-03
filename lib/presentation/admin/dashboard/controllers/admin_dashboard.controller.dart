@@ -71,7 +71,7 @@ class AdminDashboardController extends GetxController {
                 'isBack': false,
                 'isHome': false,
                 'height': 80,
-                'maxWidth': 1000,
+                'maxWidth': 1280,
                 'titleColor': AppTheme.onPrimary,
                 'leading': logoLabel(
                   subTitle: 'Admin Control Managment',
@@ -90,7 +90,7 @@ class AdminDashboardController extends GetxController {
                 'padding': 16,
                 'radius': 16,
                 'height': double.infinity,
-                'width': double.infinity,
+                // 'width': double.infinity,
               },
               child: DynamicWidgetData(
                 type: 'Column',
@@ -103,14 +103,13 @@ class AdminDashboardController extends GetxController {
                   DynamicWidgetData(
                     type: 'Container',
                     properties: {
-                      'width': double.infinity,
+                      'maxWidth': 1280,
                     },
                     child: DynamicWidgetData(
                       type: 'Wrap',
                       properties: {
                         'spacing': 12,
                         'runSpacing': 12,
-                        'aspectRatio': 2.5,
                       },
                       children: texts.map((text) {
                         return DynamicWidgetData(
