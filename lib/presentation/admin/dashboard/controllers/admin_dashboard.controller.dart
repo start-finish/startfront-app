@@ -107,7 +107,7 @@ class AdminDashboardController extends GetxController {
                     type: 'Container',
                     properties: {
                       'width': 1280,
-                      'verticalPadding': 16,
+                      'padding': 16,
                     },
                     child: DynamicWidgetData(
                       type: 'Column',
@@ -134,7 +134,7 @@ class AdminDashboardController extends GetxController {
                                 'radius': 16,
                                 'borderWidth': 1,
                                 'borderColor':
-                                    AppTheme.onSurface.withOpacity(0.3),
+                                    AppTheme.onSurface.withOpacity(0.15),
                               },
                               child: DynamicWidgetData(
                                 type: 'Column',
@@ -218,7 +218,7 @@ class AdminDashboardController extends GetxController {
                                 'radius': 16,
                                 'borderWidth': 1,
                                 'borderColor':
-                                    AppTheme.onSurface.withOpacity(0.3),
+                                    AppTheme.onSurface.withOpacity(0.15),
                               },
                               child: DynamicWidgetData(
                                 type: 'Column',
@@ -302,7 +302,7 @@ class AdminDashboardController extends GetxController {
                                 'radius': 16,
                                 'borderWidth': 1,
                                 'borderColor':
-                                    AppTheme.onSurface.withOpacity(0.3),
+                                    AppTheme.onSurface.withOpacity(0.15),
                               },
                               child: DynamicWidgetData(
                                 type: 'Column',
