@@ -60,6 +60,8 @@ class SignupController extends GetxController {
   //   );
   // }
 
+  // TODO: check validation
+
   buildBody() {
     return DynamicWidgetData(
       type: 'Container',

@@ -12,7 +12,7 @@ class AppTheme {
   static Color get onPrimary => Colors.white;
 
   static Color get background =>
-      isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA);
+      isDark ? const Color(0xFF121212) : const Color(0xFFE4EDF9);
 
   static Color get onBackground =>
       isDark ? const Color(0xFFE0E0E0) : const Color(0xFF263238);

@@ -68,6 +68,9 @@ containerComponent({required DynamicWidgetData data}) {
             ),
     ),
     constraints: BoxConstraints(
+      minWidth: (property['width'] as num?)?.toDouble() ??
+          (property['maxWidth'] as num?)?.toDouble() ??
+          0.0,
       maxWidth: (property['width'] as num?)?.toDouble() ??
           (property['maxWidth'] as num?)?.toDouble() ??
           double.infinity,

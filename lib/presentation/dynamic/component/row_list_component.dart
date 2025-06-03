@@ -9,13 +9,9 @@ rowListComponent({required DynamicWidgetData data}) {
   return SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     child: Row(
+      spacing: property['spacing'] ?? 0.0,
       children: data.children.map((childData) {
-        return Padding(
-          padding: EdgeInsets.symmetric(
-                  horizontal: property['space'] ?? 0.0,
-                ),
-          child: DynamicWidgetFactory.createWidget(childData),
-        );
+        return DynamicWidgetFactory.createWidget(childData);
       }).toList(),
     ),
   );
