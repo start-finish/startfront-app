@@ -11,6 +11,17 @@ class AdminDashboardController extends GetxController {
     'Widget Presets',
     'Total Users',
   ];
+  List<dynamic> platformManage = [
+    {
+      'title': 'Platform Screens',
+      'subTitle': 'Manage and edit StartFront UI screens',
+    },
+    'Navigation Menus',
+    'Widget Management',
+    'Widget Presets',
+    'Global Theme',
+    'Roles & Permissions'
+  ];
 
   @override
   void onInit() {
@@ -27,28 +38,14 @@ class AdminDashboardController extends GetxController {
     super.onClose();
   }
 
-  int getColumnCount(double width) {
-    if (width <= 600) return 1;
-    if (width <= 1280) return 4;
-    return 3;
-  }
-
   double getItemWidth(double screenWidth) {
     final spacing = 12;
-    final columnCount = getColumnCount(screenWidth);
-    return (screenWidth - ((columnCount + 1) * spacing)) / columnCount;
-  }
-
-  int getManageCount(double width) {
-    if (width <= 600) return 1;
-    if (width <= 1280) return 3;
-    return 2;
+    return (screenWidth - ((5 + 1) * spacing)) / 5;
   }
 
   double getManageWidth(double screenWidth) {
     final spacing = 12;
-    final columnCount = getManageCount(screenWidth);
-    return (screenWidth - ((columnCount + 1) * spacing)) / columnCount;
+    return (screenWidth - ((4 + 1) * spacing)) / 4;
   }
 
   buildBody() {
@@ -182,6 +179,19 @@ class AdminDashboardController extends GetxController {
                           }).toList(),
                         ),
                         // NOTE: platform management
+                        // SvgPicture.asset(
+                        //   'assets/my_icon.svg',
+                        //   width: 32,
+                        //   height: 32,
+                        // ),
+                        DynamicWidgetData(
+                          type: 'SvgImage',
+                          properties: {
+                            'width': 100,
+                            'height': 100,
+                            'image': 'assets/svg/activity-circle.svg',
+                          },
+                        ),
                         DynamicWidgetData(
                           type: 'SizedBox',
                           properties: {'height': 8},

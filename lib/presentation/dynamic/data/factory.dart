@@ -18,6 +18,7 @@ import '../component/row_list_component.dart';
 import '../component/scroll_component.dart';
 import '../component/sizedbox_component.dart';
 import '../component/stack_component.dart';
+import '../component/svg_image_component.dart';
 import '../component/text_component.dart';
 import '../component/textfield_component.dart';
 import '../component/wrap_component.dart';
@@ -54,6 +55,8 @@ class DynamicWidgetFactory {
         return iconComponent(data: widgetData);
       case 'Image':
         return imageComponent(data: widgetData);
+      case 'SvgImage':
+        return svgImageComponent(data: widgetData);
       case 'Rotate':
         return rotateComponent(data: widgetData);
 
