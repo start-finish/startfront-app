@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../infrastructure/theme/app_theme.dart';
@@ -11,16 +12,63 @@ class AdminDashboardController extends GetxController {
     'Widget Presets',
     'Total Users',
   ];
-  List<dynamic> platformManage = [
+  List<dynamic> platformManages = [
     {
       'title': 'Platform Screens',
       'subTitle': 'Manage and edit StartFront UI screens',
+      'icon': 'assets/svg/platform.svg',
+      'color': Colors.blue,
     },
-    'Navigation Menus',
-    'Widget Management',
-    'Widget Presets',
-    'Global Theme',
-    'Roles & Permissions'
+    {
+      'title': 'Navigation Menus',
+      'subTitle': 'Configure plaform navigation',
+      'icon': 'assets/svg/navigation.svg',
+      'color': Colors.green,
+    },
+    {
+      'title': 'Widget Management',
+      'subTitle': 'Create and manage custom widgets',
+      'icon': 'assets/svg/widget-manage.svg',
+      'color': Colors.deepPurpleAccent,
+    },
+    {
+      'title': 'Widget Presets',
+      'subTitle': 'Manage reusable widget combinations',
+      'icon': 'assets/svg/widget-presets.svg',
+      'color': Colors.purpleAccent,
+    },
+    {
+      'title': 'Global Theme',
+      'subTitle': 'Platfrom-wide styling and branding',
+      'icon': 'assets/svg/theme.svg',
+      'color': Colors.pinkAccent,
+    },
+    {
+      'title': 'Roles & Permissions',
+      'subTitle': 'User access and security settings',
+      'icon': 'assets/svg/role-permission.svg',
+      'color': Colors.red,
+    },
+  ];
+  List<dynamic> clientManages = [
+    {
+      'title': 'Client Projects',
+      'subTitle': 'Manage client accounts and projects',
+      'icon': 'assets/svg/users-group.svg',
+      'color': Colors.indigoAccent,
+    },
+    {
+      'title': 'Platform Analytics',
+      'subTitle': 'View usage and performance metrics',
+      'icon': 'assets/svg/analytic.svg',
+      'color': Colors.orange,
+    },
+    {
+      'title': 'System Settings',
+      'subTitle': 'Configure platform settings',
+      'icon': 'assets/svg/settings.svg',
+      'color': Colors.blueGrey,
+    },
   ];
 
   @override
@@ -52,7 +100,7 @@ class AdminDashboardController extends GetxController {
     return DynamicWidgetData(
       type: 'Container',
       properties: {
-        'gradient': 'secondary',
+        'gradient': 'primary',
       },
       child: DynamicWidgetData(
         type: 'Column',
@@ -82,6 +130,25 @@ class AdminDashboardController extends GetxController {
                   subTitle: 'Admin Control Managment',
                   isMainAxisSize: 'min',
                 ).toWidget(),
+                'action': [
+                  // DynamicWidgetData(
+                  //   type: 'Button',
+                  //   properties: {
+                  //     'color': AppTheme.primary,
+                  //     'title': 'test',
+                  //     // 'action': () => Get.offAllNamed('signup'),
+                  //   },
+                  DynamicWidgetData(
+                    type: 'Text',
+                    properties: {
+                      'text': 'Sign up',
+                      'fontWeight': 'bold',
+                      'color': AppTheme.background,
+                      'fontSize': 12,
+                    },
+                  ),
+                  // ),
+                ],
               },
             ),
           ),
@@ -115,7 +182,7 @@ class AdminDashboardController extends GetxController {
                       },
                       children: [
                         DynamicWidgetData(
-                          type: 'Wrap',
+                          type: 'FlexibleWrap',
                           properties: {
                             'spacing': 12,
                             'runSpacing': 12,
@@ -179,19 +246,6 @@ class AdminDashboardController extends GetxController {
                           }).toList(),
                         ),
                         // NOTE: platform management
-                        // SvgPicture.asset(
-                        //   'assets/my_icon.svg',
-                        //   width: 32,
-                        //   height: 32,
-                        // ),
-                        DynamicWidgetData(
-                          type: 'SvgImage',
-                          properties: {
-                            'width': 100,
-                            'height': 100,
-                            'image': 'assets/svg/activity-circle.svg',
-                          },
-                        ),
                         DynamicWidgetData(
                           type: 'SizedBox',
                           properties: {'height': 8},
@@ -212,12 +266,12 @@ class AdminDashboardController extends GetxController {
                           },
                         ),
                         DynamicWidgetData(
-                          type: 'Wrap',
+                          type: 'FlexibleWrap',
                           properties: {
                             'spacing': 12,
                             'runSpacing': 12,
                           },
-                          children: texts.map((text) {
+                          children: platformManages.map((item) {
                             return DynamicWidgetData(
                               type: 'Container',
                               properties: {
@@ -231,41 +285,50 @@ class AdminDashboardController extends GetxController {
                                     AppTheme.onSurface.withOpacity(0.15),
                               },
                               child: DynamicWidgetData(
-                                type: 'Column',
+                                type: 'Row',
                                 properties: {
                                   'mainAxisSize': 'min',
+                                  'crossAxisAlignment': 'center',
                                   'spacing': 12,
                                 },
                                 children: [
                                   DynamicWidgetData(
-                                    type: 'Text',
+                                    type: 'Container',
                                     properties: {
-                                      'text': text,
-                                      'fontWeight': 'w600',
-                                      'color': AppTheme.secondary,
+                                      'color': item['color'],
+                                      'padding': 8,
+                                      'radius': 8,
                                     },
+                                    child: DynamicWidgetData(
+                                      type: 'SvgImage',
+                                      properties: {
+                                        'width': 24,
+                                        'height': 24,
+                                        'image': item['icon'],
+                                        'color': AppTheme.onPrimary,
+                                      },
+                                    ),
                                   ),
                                   DynamicWidgetData(
-                                    type: 'Row',
+                                    type: 'Column',
                                     properties: {
-                                      'crossAxisAlignment': 'center',
-                                      'spacing': 8,
+                                      'mainAxisAlignment': 'center',
                                     },
                                     children: [
                                       DynamicWidgetData(
                                         type: 'Text',
                                         properties: {
-                                          'text': '22',
-                                          'fontSize': 22,
-                                          'fontWeight': 'bold',
-                                          'color': AppTheme.onSurface,
+                                          'text': item['title'],
+                                          'fontWeight': 'w600',
+                                          'fontSize': 16,
+                                          'color': AppTheme.secondary,
                                         },
                                       ),
                                       DynamicWidgetData(
                                         type: 'Text',
                                         properties: {
-                                          'text': '+1 this week',
-                                          'color': AppTheme.primary,
+                                          'text': item['subTitle'],
+                                          'color': AppTheme.secondary,
                                         },
                                       ),
                                     ],
@@ -296,12 +359,12 @@ class AdminDashboardController extends GetxController {
                           },
                         ),
                         DynamicWidgetData(
-                          type: 'Wrap',
+                          type: 'FlexibleWrap',
                           properties: {
                             'spacing': 12,
                             'runSpacing': 12,
                           },
-                          children: texts.map((text) {
+                          children: clientManages.map((item) {
                             return DynamicWidgetData(
                               type: 'Container',
                               properties: {
@@ -315,41 +378,50 @@ class AdminDashboardController extends GetxController {
                                     AppTheme.onSurface.withOpacity(0.15),
                               },
                               child: DynamicWidgetData(
-                                type: 'Column',
+                                type: 'Row',
                                 properties: {
                                   'mainAxisSize': 'min',
+                                  'crossAxisAlignment': 'center',
                                   'spacing': 12,
                                 },
                                 children: [
                                   DynamicWidgetData(
-                                    type: 'Text',
+                                    type: 'Container',
                                     properties: {
-                                      'text': text,
-                                      'fontWeight': 'w600',
-                                      'color': AppTheme.secondary,
+                                      'color': item['color'],
+                                      'padding': 8,
+                                      'radius': 8,
                                     },
+                                    child: DynamicWidgetData(
+                                      type: 'SvgImage',
+                                      properties: {
+                                        'width': 24,
+                                        'height': 24,
+                                        'image': item['icon'],
+                                        'color': AppTheme.onPrimary,
+                                      },
+                                    ),
                                   ),
                                   DynamicWidgetData(
-                                    type: 'Row',
+                                    type: 'Column',
                                     properties: {
-                                      'crossAxisAlignment': 'center',
-                                      'spacing': 8,
+                                      'mainAxisAlignment': 'center',
                                     },
                                     children: [
                                       DynamicWidgetData(
                                         type: 'Text',
                                         properties: {
-                                          'text': '22',
-                                          'fontSize': 22,
-                                          'fontWeight': 'bold',
-                                          'color': AppTheme.onSurface,
+                                          'text': item['title'],
+                                          'fontWeight': 'w600',
+                                          'fontSize': 16,
+                                          'color': AppTheme.secondary,
                                         },
                                       ),
                                       DynamicWidgetData(
                                         type: 'Text',
                                         properties: {
-                                          'text': '+1 this week',
-                                          'color': AppTheme.primary,
+                                          'text': item['subTitle'],
+                                          'color': AppTheme.secondary,
                                         },
                                       ),
                                     ],

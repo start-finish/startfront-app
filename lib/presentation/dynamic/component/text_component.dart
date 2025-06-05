@@ -12,7 +12,7 @@ textComponent({required data}) {
       fontSize: (property['fontSize'] as num?)?.toDouble() ?? 14.0,
       color: property['color'] ?? Colors.black,
       fontWeight: parseFontWeight(property['fontWeight']),
-      overflow: property['overflow'],
+      overflow: property['overflow'] ?? TextOverflow.ellipsis,
     ),
     softWrap: property['softWrap'] ?? false,
   );

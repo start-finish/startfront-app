@@ -21,6 +21,7 @@ import '../component/stack_component.dart';
 import '../component/svg_image_component.dart';
 import '../component/text_component.dart';
 import '../component/textfield_component.dart';
+import '../component/flexible_wrap_component.dart';
 import '../component/wrap_component.dart';
 import 'data.dart';
 
@@ -75,6 +76,8 @@ class DynamicWidgetFactory {
         return stackComponent(data: widgetData);
       case 'Wrap':
         return wrapComponent(data: widgetData);
+      case 'FlexibleWrap':
+        return flexibleWrapComponent(data: widgetData);
 
       // Add more cases for different widget types...
       default:

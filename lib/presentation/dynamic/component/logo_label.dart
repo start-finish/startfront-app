@@ -17,7 +17,7 @@ logoLabel({
     child: DynamicWidgetData(
       type: 'Row',
       properties: {
-        'mainAxisSize': isMainAxisSize ?? 'max',
+        'mainAxisSize': isMainAxisSize ?? 'min',
         'mainAxisAlignment': 'center',
         'crossAxisAlignment': 'center',
         'spacing': 12,

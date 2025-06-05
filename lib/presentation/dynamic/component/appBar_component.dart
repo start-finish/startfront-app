@@ -7,6 +7,7 @@ import 'package:startfront_app/infrastructure/theme/app_theme.dart';
 import 'package:touch_ripple_effect/touch_ripple_effect.dart';
 
 import '../data/data.dart';
+import '../data/factory.dart';
 import '../data/helper.dart';
 
 appBarComponent({required DynamicWidgetData data}) {
@@ -105,12 +106,13 @@ appBarComponent({required DynamicWidgetData data}) {
                 ),
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (property['action'] != null && property['action'] is List)
+                  if (property['action'] != null)
                     Row(
-                      children: (property['action'] as List<dynamic>)
-                          .map<Widget>(
-                              (actionData) => createActionButton(actionData))
+                      children: data.children
+                          .map((childData) =>
+                              DynamicWidgetFactory.createWidget(childData))
                           .toList(),
                     ),
                   isHome == true
