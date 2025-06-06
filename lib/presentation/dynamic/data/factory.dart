@@ -51,7 +51,7 @@ class DynamicWidgetFactory {
       case 'Flexible':
         return flexibleComponent(data: widgetData);
       case 'Button':
-        return buttonComponent(data: widgetData);
+        return HoverRippleButton(data: widgetData);
       case 'Icon':
         return iconComponent(data: widgetData);
       case 'Image':

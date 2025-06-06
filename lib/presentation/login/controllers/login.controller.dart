@@ -147,8 +147,10 @@ class LoginController extends GetxController {
                   'color': AppTheme.primary,
                   'title': 'Sign In',
                   'titleColor': AppTheme.onPrimary,
-                  'leadingIcon': Icons.login,
-                  'leadingIconColor': AppTheme.onPrimary,
+                  'svgIcon': 'assets/svg/log-in.svg',
+                  'svgColor': AppTheme.onPrimary,
+                  'padding': 8,
+                  'radius': 12,
                   'action': () async =>
                       await Get.offAllNamed('/admin-dashboard'),
                   // 'action': () async => await fetchLogin(),
@@ -177,7 +179,7 @@ class LoginController extends GetxController {
                   DynamicWidgetData(
                     type: 'Button',
                     properties: {
-                      'action': () => Get.offAllNamed('signup'),
+                      'action': () => Get.offAllNamed('/signup'),
                     },
                     child: DynamicWidgetData(
                       type: 'Text',

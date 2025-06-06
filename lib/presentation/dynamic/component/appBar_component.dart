@@ -110,9 +110,9 @@ appBarComponent({required DynamicWidgetData data}) {
                 children: [
                   if (property['action'] != null)
                     Row(
-                      children: data.children
-                          .map((childData) =>
-                              DynamicWidgetFactory.createWidget(childData))
+                      children: (property['action'] as List)
+                          .map<Widget>(
+                              (e) => DynamicWidgetFactory.createWidget(e))
                           .toList(),
                     ),
                   isHome == true

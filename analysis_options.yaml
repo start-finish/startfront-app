@@ -2,6 +2,7 @@ analyzer:
   errors:
     avoid_print: ignore
     constant_identifier_names: ignore
+    dead_code: ignore
     depend_on_referenced_packages: ignore
     deprecated_member_use: ignore
     prefer_if_null_operators: ignore

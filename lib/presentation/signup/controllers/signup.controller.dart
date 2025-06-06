@@ -154,8 +154,10 @@ class SignupController extends GetxController {
                   'color': AppTheme.primary,
                   'title': 'Create Account',
                   'titleColor': AppTheme.onPrimary,
-                  'leadingIcon': Icons.person_add_alt_rounded,
-                  'leadingIconColor': AppTheme.onPrimary,
+                  'padding': 8,
+                  'radius': 12,
+                  'svgIcon': 'assets/svg/sign-up.svg',
+                  'svgColor': AppTheme.onPrimary,
                   'action': () async {
                     // TODO:
                     // await fetchLogin();
@@ -182,7 +184,7 @@ class SignupController extends GetxController {
                     properties: {
                       'action': () {
                         // TODO:
-                        Get.offAllNamed('login');
+                        Get.offAllNamed('/login');
                       }
                     },
                     child: DynamicWidgetData(
