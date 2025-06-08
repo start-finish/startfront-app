@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:touch_ripple_effect/touch_ripple_effect.dart';
 
-import '../data/data.dart'; // Import your DynamicWidgetData
+import '../../../infrastructure/theme/app_theme.dart';
+import '../data/data.dart';
+import '../data/factory.dart';
+import '../data/helper.dart'; // Import your DynamicWidgetData
 
 class HoverRippleButton extends StatefulWidget {
   final DynamicWidgetData data;
@@ -16,225 +19,167 @@ class HoverRippleButton extends StatefulWidget {
 class _HoverRippleButtonState extends State<HoverRippleButton> {
   bool isHovered = false;
 
+  DynamicWidgetData injectIsHoverRecursively(
+      DynamicWidgetData data, bool isHover) {
+    return DynamicWidgetData(
+      type: data.type,
+      properties: {
+        ...data.properties,
+        'isHover': isHover,
+      },
+      child: data.child != null
+          ? injectIsHoverRecursively(data.child!, isHover)
+          : null,
+      children: data.children
+          .map((child) => injectIsHoverRecursively(child, isHover))
+          .toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final property = widget.data.properties;
+    final gradientKey = property['gradient'] as String?;
+    final gradient = gradientFromKey(gradientKey);
+
+    final updatedChild = widget.data.child != null
+        ? injectIsHoverRecursively(widget.data.child!, isHovered)
+        : null;
 
     return MouseRegion(
-      onEnter: (_) => setState(() => isHovered = true),
-      onExit: (_) => setState(() => isHovered = false),
+      onEnter: (_) {
+        setState(() {
+          property['isHover'] = true;
+          isHovered = true;
+        });
+        print(property['isHover']);
+      },
+      onExit: (_) {
+        setState(() {
+          property['isHover'] = false;
+          isHovered = false;
+        });
+        print(property['isHover']);
+      },
       child: TouchRippleEffect(
         onTap: property['action'],
-        rippleColor: property['rippleColor'] ?? Colors.black26,
-        borderRadius: BorderRadius.circular(
-          (property['radius'] as num?)?.toDouble() ?? 8.0,
-        ),
+        rippleColor: property['rippleColor'] ?? Colors.white24,
+        borderRadius: property['radius'] == null
+            ? BorderRadius.only(
+                topLeft: Radius.circular(property['radiusTopLeft'] ?? 0.0),
+                topRight: Radius.circular(property['radiusTopRight'] ?? 0.0),
+                bottomLeft:
+                    Radius.circular(property['radiusBottomLeft'] ?? 0.0),
+                bottomRight:
+                    Radius.circular(property['radiusBottomRight'] ?? 0.0),
+              )
+            : BorderRadius.circular(
+                (property['radius'] as num?)?.toDouble() ?? 12),
         child: AnimatedContainer(
+          width: property['width'],
+          height: property['height'],
           duration: const Duration(milliseconds: 150),
-          padding: EdgeInsets.symmetric(
-            horizontal:
-                (property['horizontalPadding'] as num?)?.toDouble() ?? 16,
-            vertical: (property['verticalPadding'] as num?)?.toDouble() ?? 8,
-          ),
+          padding: (property['padding'] as num?)?.toDouble() != null
+              ? EdgeInsets.all((property['padding'] as num?)?.toDouble() ?? 8.0)
+              : (property['verticalPadding'] as num?)?.toDouble() != null ||
+                      (property['horizontalPadding'] as num?)?.toDouble() !=
+                          null
+                  ? EdgeInsets.symmetric(
+                      vertical:
+                          (property['verticalPadding'] as num?)?.toDouble() ??
+                              0.0,
+                      horizontal:
+                          (property['horizontalPadding'] as num?)?.toDouble() ??
+                              0.0,
+                    )
+                  : EdgeInsets.only(
+                      top: (property['topPadding'] as num?)?.toDouble() ?? 0.0,
+                      bottom: (property['bottomPadding'] as num?)?.toDouble() ??
+                          0.0,
+                      left:
+                          (property['leftPadding'] as num?)?.toDouble() ?? 0.0,
+                      right:
+                          (property['rightPadding'] as num?)?.toDouble() ?? 0.0,
+                    ),
           decoration: BoxDecoration(
-            color: isHovered
-                ? property['hoverColor'] ?? property['color'] ?? Colors.white
-                : property['color'] ?? Colors.white,
+            color: gradient == null
+                ? isHovered
+                    ? property['hoverColor'] ??
+                        property['color'] ??
+                        Colors.white
+                    : property['color'] ?? Colors.white
+                : null,
+            gradient: gradient,
             borderRadius: BorderRadius.circular(
-              (property['radius'] as num?)?.toDouble() ?? 8,
+              (property['radius'] as num?)?.toDouble() ?? 12,
             ),
             border: Border.all(
-              color: property['borderColor'] ?? Colors.black12,
-              width: (property['borderWidth'] as num?)?.toDouble() ?? 1,
+              color: property['borderColor'] ?? Colors.transparent,
+              width: (property['borderWidth'] as num?)?.toDouble() ?? 0,
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (property['svgIcon'] != null)
-                SvgPicture.asset(
-                  property['svgIcon'],
-                  width: (property['iconSize'] as num?)?.toDouble() ?? 18,
-                  height: (property['iconSize'] as num?)?.toDouble() ?? 18,
-                  color: isHovered
-                      ? property['hoverTextColor'] ??
-                          property['textColor'] ??
-                          Colors.red
-                      : property['textColor'] ?? Colors.black,
+          child: updatedChild != null
+              ? DynamicWidgetFactory.createWidget(updatedChild)
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (property['svgIcon'] != null)
+                      SvgPicture.asset(
+                        property['svgIcon'],
+                        width: isHovered
+                            ? (property['hoverSvgIconSize'] as num?)
+                                    ?.toDouble() ??
+                                18
+                            : (property['svgIconSize'] as num?)?.toDouble() ??
+                                18,
+                        height: isHovered
+                            ? (property['hoverSvgIconSize'] as num?)
+                                    ?.toDouble() ??
+                                18
+                            : (property['svgIconSize'] as num?)?.toDouble() ??
+                                18,
+                        color: isHovered
+                            ? (property['hoverSvgIconColor'] ??
+                                    property['svgIconColor'] ??
+                                    AppTheme.onPrimary)
+                                .withAlpha(150)
+                            : property['svgIconColor'] ?? AppTheme.onPrimary,
+                      ),
+                    if (property['icon'] != null)
+                      Icon(
+                        property['icon'] ?? Icons.settings,
+                        color: isHovered
+                            ? (property['hoverIconColor'] ??
+                                    property['iconColor'] ??
+                                    AppTheme.onPrimary)
+                                .withAlpha(150)
+                            : property['iconColor'] ?? AppTheme.onPrimary,
+                        size: property['iconSize'] ?? 24.0,
+                      ),
+                    if (property['svgIcon'] != null) const SizedBox(width: 8),
+                    Text(
+                      property['title'] ?? 'Button',
+                      style: TextStyle(
+                        color: isHovered
+                            ? (property['hoverTextColor'] ??
+                                    property['textColor'] ??
+                                    AppTheme.onPrimary)
+                                .withAlpha(150)
+                            : property['textColor'] ?? AppTheme.onPrimary,
+                        fontSize: isHovered
+                            ? (property['hoverFontSize'] ??
+                                        property['fontSize'] as num?)
+                                    ?.toDouble() ??
+                                14
+                            : (property['fontSize'] as num?)?.toDouble() ?? 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-              if (property['leadingIcon'] != null)
-                Icon(
-                  property['leadingIcon'] ?? Icons.settings,
-                  color: property['leadingIconColor'],
-                  size: property['leadingIconSize'] ?? 24.0,
-                ),
-              if (property['svgIcon'] != null) const SizedBox(width: 8),
-              Text(
-                property['title'] ?? 'Button',
-                style: TextStyle(
-                  color: isHovered
-                      ? property['hoverTextColor'] ?? Colors.red
-                      : property['textColor'] ?? Colors.black,
-                  fontSize: (property['fontSize'] as num?)?.toDouble() ?? 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
   }
-}
-
-buttonComponent({required DynamicWidgetData data}) {
-  final property = data.properties;
-
-  final gradientKey = property['gradient'] as String?;
-  final gradient = gradientFromKey(gradientKey);
-
-  return StatefulBuilder(builder: (context, setState) {
-    final isHovered = false.obs;
-
-    return Obx(() {
-      return MouseRegion(
-        onEnter: (_) {
-          property['onHover'] = true;
-          isHovered.value = true;
-          print(isHovered);
-        },
-        onExit: (_) {
-          property['onHover'] = false;
-          isHovered.value = false;
-          print(isHovered);
-        },
-        child: TouchRippleEffect(
-          onTap: () async {
-            property['action']?.call();
-          },
-          rippleColor: property['rippleColor'] ?? Colors.white24,
-          borderRadius: property['radius'] == null
-              ? BorderRadius.only(
-                  topLeft: Radius.circular(property['radiusTopLeft'] ?? 0.0),
-                  topRight: Radius.circular(property['radiusTopRight'] ?? 0.0),
-                  bottomLeft:
-                      Radius.circular(property['radiusBottomLeft'] ?? 0.0),
-                  bottomRight:
-                      Radius.circular(property['radiusBottomRight'] ?? 0.0),
-                )
-              : BorderRadius.circular(
-                  (property['radius'] as num?)?.toDouble() ?? 12),
-          child: data.child != null
-              ? DynamicWidgetFactory.createWidget(data.child!)
-              : Container(
-                  padding: (property['padding'] as num?)?.toDouble() != null
-                      ? EdgeInsets.all(
-                          (property['padding'] as num?)?.toDouble() ?? 8.0)
-                      : (property['verticalPadding'] as num?)?.toDouble() !=
-                                  null ||
-                              (property['horizontalPadding'] as num?)
-                                      ?.toDouble() !=
-                                  null
-                          ? EdgeInsets.symmetric(
-                              vertical: (property['verticalPadding'] as num?)
-                                      ?.toDouble() ??
-                                  0.0,
-                              horizontal:
-                                  (property['horizontalPadding'] as num?)
-                                          ?.toDouble() ??
-                                      0.0,
-                            )
-                          : EdgeInsets.only(
-                              top: (property['topPadding'] as num?)
-                                      ?.toDouble() ??
-                                  0.0,
-                              bottom: (property['bottomPadding'] as num?)
-                                      ?.toDouble() ??
-                                  0.0,
-                              left: (property['leftPadding'] as num?)
-                                      ?.toDouble() ??
-                                  0.0,
-                              right: (property['rightPadding'] as num?)
-                                      ?.toDouble() ??
-                                  0.0,
-                            ),
-                  decoration: BoxDecoration(
-                    color: gradient == null
-                        ? (isHovered.value
-                            ? property['hoverColor'] ?? property['color']
-                            : property['color'] ?? Colors.white)
-                        : null,
-                    gradient: gradient,
-                    border: Border.all(
-                      color: property['borderColor'] ?? Colors.transparent,
-                      width:
-                          (property['borderWidth'] as num?)?.toDouble() ?? 0.0,
-                    ),
-                    borderRadius:
-                        (property['radius'] as num?)?.toDouble() != null
-                            ? BorderRadius.circular(
-                                (property['radius'] as num?)?.toDouble() ?? 12)
-                            : BorderRadius.only(
-                                topLeft: Radius.circular(
-                                    (property['radiusTopLeft'] as num?)
-                                            ?.toDouble() ??
-                                        0.0),
-                                topRight: Radius.circular(
-                                    (property['radiusTopRight'] as num?)
-                                            ?.toDouble() ??
-                                        0.0),
-                                bottomLeft: Radius.circular(
-                                    (property['radiusBottomLeft'] as num?)
-                                            ?.toDouble() ??
-                                        0.0),
-                                bottomRight: Radius.circular(
-                                    (property['radiusBottomRight'] as num?)
-                                            ?.toDouble() ??
-                                        0.0),
-                              ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (property['svgIcon'] != null)
-                        SvgPicture.asset(
-                          property['svgIcon'],
-                          color: property['svgColor'] ?? Colors.black,
-                          width: property['svgSize'] ?? 18,
-                          height: property['svgSize'] ?? 18,
-                        ),
-                      if (property['leadingIcon'] != null)
-                        Icon(
-                          property['leadingIcon'] ?? Icons.settings,
-                          color: property['leadingIconColor'],
-                          size: property['leadingIconSize'] ?? 24.0,
-                        ),
-                      if (property['leadingIcon'] != null ||
-                          property['svgIcon'] != null)
-                        SizedBox(width: 8),
-                      Text(
-                        property['title'] ?? 'data',
-                        style: TextStyle(
-                          color: isHovered.value
-                              ? property['hoverTitleColor'] ?? Colors.red
-                              : property['titleColor'] ?? Colors.black,
-                          fontSize: property['titleSize'] ?? 14.0,
-                        ),
-                      ),
-                      if (property['trailingIcon'] != null)
-                        property['trailingIcon'] ?? SizedBox(width: 8),
-                      if (property['trailingIcon'] != null)
-                        property['trailingIcon'] ??
-                            Icon(
-                              Icons.settings,
-                              color: property['trailingIconColor'],
-                              size: property['trailingIconSize'] ?? 24.0,
-                            ),
-                    ],
-                  ),
-                ),
-        ),
-      );
-    });
-  });
 }

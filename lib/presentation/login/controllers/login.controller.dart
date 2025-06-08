@@ -145,6 +145,7 @@ class LoginController extends GetxController {
                 type: 'Button',
                 properties: {
                   'color': AppTheme.primary,
+                  'width': double.infinity,
                   'title': 'Sign In',
                   'titleColor': AppTheme.onPrimary,
                   'svgIcon': 'assets/svg/log-in.svg',

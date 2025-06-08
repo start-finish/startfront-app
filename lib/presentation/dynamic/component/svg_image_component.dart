@@ -5,6 +5,7 @@ import '../data/data.dart';
 
 svgImageComponent({required DynamicWidgetData data}) {
   final property = data.properties;
+  final isHovered = data.properties['isHover'] == true;
 
   return SvgPicture.asset(
     property['image'],

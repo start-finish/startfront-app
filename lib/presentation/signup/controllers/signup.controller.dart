@@ -152,6 +152,7 @@ class SignupController extends GetxController {
                 type: 'Button',
                 properties: {
                   'color': AppTheme.primary,
+                  'width': double.infinity,
                   'title': 'Create Account',
                   'titleColor': AppTheme.onPrimary,
                   'padding': 8,

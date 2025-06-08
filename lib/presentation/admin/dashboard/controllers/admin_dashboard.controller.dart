@@ -96,6 +96,8 @@ class AdminDashboardController extends GetxController {
     return (screenWidth - ((4 + 1) * spacing)) / 4;
   }
 
+  bool isHovered = false;
+
   buildBody() {
     return DynamicWidgetData(
       type: 'Container',
@@ -131,33 +133,17 @@ class AdminDashboardController extends GetxController {
                   isMainAxisSize: 'min',
                 ).toWidget(),
                 'action': [
-                  // DynamicWidgetData(
-                  //   type: 'Button',
-                  //   properties: {
-                  //     'color': AppTheme.surface,
-                  //     'rippleColor': Colors.black38,
-                  //     'borderColor': AppTheme.onSurface,
-                  //     'borderWidth': 1,
-                  //     'title': 'Logout',
-                  //     'hoverTitleColor': Colors.red,
-                  //     'hoverColor': Colors.red.shade300,
-                  //     'radius': 8,
-                  //     'horizontalPadding': 16,
-                  //     'verticalPadding': 8,
-                  //     'svgIcon': 'assets/svg/log-out.svg',
-                  //     // 'leading':
-                  //     'action': () => Get.offAllNamed('/login'),
-                  //   },
-                  // ),
                   DynamicWidgetData(
                     type: 'Button',
                     properties: {
+                      'rippleColor': Colors.black26,
+                      'borderColor': AppTheme.onSurface,
+                      'borderWidth': 1,
                       'title': 'Logout',
                       'svgIcon': 'assets/svg/log-out.svg',
+                      'svgIconColor': AppTheme.onSurface,
                       'color': Colors.white,
-                      'hoverColor': Colors.red.shade100,
                       'textColor': Colors.black,
-                      'hoverTextColor': Colors.red,
                       'horizontalPadding': 16,
                       'verticalPadding': 8,
                       'radius': 8,
@@ -165,7 +151,7 @@ class AdminDashboardController extends GetxController {
                       'iconSize': 18,
                       'action': () => Get.offAllNamed('/login'),
                     },
-                  )
+                  ),
                 ],
               },
             ),
@@ -303,55 +289,63 @@ class AdminDashboardController extends GetxController {
                                     AppTheme.onSurface.withOpacity(0.15),
                               },
                               child: DynamicWidgetData(
-                                type: 'Row',
+                                type: 'Button',
                                 properties: {
-                                  'mainAxisSize': 'min',
-                                  'crossAxisAlignment': 'center',
-                                  'spacing': 12,
+                                  'isHover': isHovered,
+                                  'action': () => null,
                                 },
-                                children: [
-                                  DynamicWidgetData(
-                                    type: 'Container',
-                                    properties: {
-                                      'color': item['color'],
-                                      'padding': 8,
-                                      'radius': 8,
-                                    },
-                                    child: DynamicWidgetData(
-                                      type: 'SvgImage',
+                                child: DynamicWidgetData(
+                                  type: 'Row',
+                                  properties: {
+                                    'mainAxisSize': 'min',
+                                    'crossAxisAlignment': 'center',
+                                    'spacing': 12,
+                                  },
+                                  children: [
+                                    DynamicWidgetData(
+                                      type: 'Container',
                                       properties: {
-                                        'width': 24,
-                                        'height': 24,
-                                        'image': item['icon'],
-                                        'color': AppTheme.onPrimary,
+                                        'color': item['color'],
+                                        'padding': 8,
+                                        'radius': 8,
                                       },
+                                      child: DynamicWidgetData(
+                                        type: 'SvgImage',
+                                        properties: {
+                                          'isHover': isHovered,
+                                          'width': isHovered == true ? 32 : 24,
+                                          'height': isHovered == true ? 32 : 24,
+                                          'image': item['icon'],
+                                          'color': AppTheme.onPrimary,
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                  DynamicWidgetData(
-                                    type: 'Column',
-                                    properties: {
-                                      'mainAxisAlignment': 'center',
-                                    },
-                                    children: [
-                                      DynamicWidgetData(
-                                        type: 'Text',
-                                        properties: {
-                                          'text': item['title'],
-                                          'fontWeight': 'w600',
-                                          'fontSize': 16,
-                                          'color': AppTheme.secondary,
-                                        },
-                                      ),
-                                      DynamicWidgetData(
-                                        type: 'Text',
-                                        properties: {
-                                          'text': item['subTitle'],
-                                          'color': AppTheme.secondary,
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                    DynamicWidgetData(
+                                      type: 'Column',
+                                      properties: {
+                                        'mainAxisAlignment': 'center',
+                                      },
+                                      children: [
+                                        DynamicWidgetData(
+                                          type: 'Text',
+                                          properties: {
+                                            'text': item['title'],
+                                            'fontWeight': 'w600',
+                                            'fontSize': 16,
+                                            'color': AppTheme.secondary,
+                                          },
+                                        ),
+                                        DynamicWidgetData(
+                                          type: 'Text',
+                                          properties: {
+                                            'text': item['subTitle'],
+                                            'color': AppTheme.secondary,
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           }).toList(),
