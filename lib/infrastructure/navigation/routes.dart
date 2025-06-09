@@ -3,10 +3,11 @@ class Routes {
     return LOGIN;
   }
 
+  static const ADMIN_DASHBOARD = '/admin-dashboard';
   static const HOME = '/home';
   static const LOGIN = '/login';
   static const SETTINGS = '/settings';
   static const SIGNUP = '/signup';
   static const SPLASH = '/splash';
-  static const ADMIN_DASHBOARD = '/admin-dashboard';
+  static const ADMIN_WIDGET_MANAGEMENT = '/admin-widget-management';
 }

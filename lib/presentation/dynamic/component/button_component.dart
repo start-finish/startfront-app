@@ -42,25 +42,9 @@ class _HoverRippleButtonState extends State<HoverRippleButton> {
     final gradientKey = property['gradient'] as String?;
     final gradient = gradientFromKey(gradientKey);
 
-    final updatedChild = widget.data.child != null
-        ? injectIsHoverRecursively(widget.data.child!, isHovered)
-        : null;
-
     return MouseRegion(
-      onEnter: (_) {
-        setState(() {
-          property['isHover'] = true;
-          isHovered = true;
-        });
-        print(property['isHover']);
-      },
-      onExit: (_) {
-        setState(() {
-          property['isHover'] = false;
-          isHovered = false;
-        });
-        print(property['isHover']);
-      },
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
       child: TouchRippleEffect(
         onTap: property['action'],
         rippleColor: property['rippleColor'] ?? Colors.white24,
@@ -110,16 +94,25 @@ class _HoverRippleButtonState extends State<HoverRippleButton> {
                     : property['color'] ?? Colors.white
                 : null,
             gradient: gradient,
-            borderRadius: BorderRadius.circular(
-              (property['radius'] as num?)?.toDouble() ?? 12,
-            ),
+            borderRadius: property['radius'] == null
+                ? BorderRadius.only(
+                    topLeft: Radius.circular(property['radiusTopLeft'] ?? 0.0),
+                    topRight:
+                        Radius.circular(property['radiusTopRight'] ?? 0.0),
+                    bottomLeft:
+                        Radius.circular(property['radiusBottomLeft'] ?? 0.0),
+                    bottomRight:
+                        Radius.circular(property['radiusBottomRight'] ?? 0.0),
+                  )
+                : BorderRadius.circular(
+                    (property['radius'] as num?)?.toDouble() ?? 12),
             border: Border.all(
               color: property['borderColor'] ?? Colors.transparent,
               width: (property['borderWidth'] as num?)?.toDouble() ?? 0,
             ),
           ),
-          child: updatedChild != null
-              ? DynamicWidgetFactory.createWidget(updatedChild)
+          child: widget.data.child != null
+              ? DynamicWidgetFactory.createWidget(widget.data.child!)
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
