@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../infrastructure/theme/app_theme.dart';
+import '../../dynamic/component/small_screen.dart';
 import 'controllers/admin_dashboard.controller.dart';
 
 class AdminDashboardScreen extends GetView<AdminDashboardController> {
@@ -11,7 +12,7 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: controller.buildBody(),
+      body: smallScreen() ?? controller.buildBody(),
     );
   }
 }

@@ -11,7 +11,7 @@ columnComponent({required DynamicWidgetData data}) {
     mainAxisAlignment: parseMainAxisAlignment(property['mainAxisAlignment']),
     crossAxisAlignment: parseCrossAxisAlignment(property['crossAxisAlignment']),
     mainAxisSize: parseMainAxisSize(property['mainAxisSize']),
-    spacing: property['spacing'] ?? 0.0,
+    spacing: (property['spacing'] as num?)?.toDouble() ?? 0.0,
     children: data.children
         .map((childData) => DynamicWidgetFactory.createWidget(childData))
         .toList(),

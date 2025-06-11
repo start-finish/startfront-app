@@ -42,6 +42,8 @@ class _HoverRippleButtonState extends State<HoverRippleButton> {
     final gradientKey = property['gradient'] as String?;
     final gradient = gradientFromKey(gradientKey);
 
+    final isButton = property['isButton'] ?? false;
+
     return MouseRegion(
       onEnter: (_) => setState(() => isHovered = true),
       onExit: (_) => setState(() => isHovered = false),
@@ -88,10 +90,8 @@ class _HoverRippleButtonState extends State<HoverRippleButton> {
           decoration: BoxDecoration(
             color: gradient == null
                 ? isHovered
-                    ? property['hoverColor'] ??
-                        property['color'] ??
-                        Colors.white
-                    : property['color'] ?? Colors.white
+                    ? (property['hoverColor'] ?? AppTheme.secondary)
+                    : property['color'] ?? Colors.transparent
                 : null,
             gradient: gradient,
             borderRadius: property['radius'] == null
@@ -133,42 +133,42 @@ class _HoverRippleButtonState extends State<HoverRippleButton> {
                             : (property['svgIconSize'] as num?)?.toDouble() ??
                                 18,
                         color: isHovered
-                            ? (property['hoverSvgIconColor'] ??
-                                    property['svgIconColor'] ??
-                                    AppTheme.onPrimary)
-                                .withAlpha(150)
+                            ? property['hoverSvgIconColor'] ??
+                                property['svgIconColor'] ??
+                                AppTheme.onPrimary
                             : property['svgIconColor'] ?? AppTheme.onPrimary,
                       ),
                     if (property['icon'] != null)
                       Icon(
                         property['icon'] ?? Icons.settings,
                         color: isHovered
-                            ? (property['hoverIconColor'] ??
-                                    property['iconColor'] ??
-                                    AppTheme.onPrimary)
-                                .withAlpha(150)
+                            ? property['hoverIconColor'] ??
+                                property['iconColor'] ??
+                                AppTheme.onPrimary
                             : property['iconColor'] ?? AppTheme.onPrimary,
                         size: property['iconSize'] ?? 24.0,
                       ),
-                    if (property['svgIcon'] != null) const SizedBox(width: 8),
-                    Text(
-                      property['title'] ?? 'Button',
-                      style: TextStyle(
-                        color: isHovered
-                            ? (property['hoverTextColor'] ??
-                                    property['textColor'] ??
-                                    AppTheme.onPrimary)
-                                .withAlpha(150)
-                            : property['textColor'] ?? AppTheme.onPrimary,
-                        fontSize: isHovered
-                            ? (property['hoverFontSize'] ??
-                                        property['fontSize'] as num?)
-                                    ?.toDouble() ??
-                                14
-                            : (property['fontSize'] as num?)?.toDouble() ?? 14,
-                        fontWeight: FontWeight.w500,
+                    if (!isButton)
+                      if (property['svgIcon'] != null) const SizedBox(width: 8),
+                    if (!isButton)
+                      Text(
+                        property['title'] ?? 'Button',
+                        style: TextStyle(
+                          color: isHovered
+                              ? property['hoverTextColor'] ??
+                                  property['textColor'] ??
+                                  AppTheme.onPrimary
+                              : property['textColor'] ?? AppTheme.onPrimary,
+                          fontSize: isHovered
+                              ? (property['hoverFontSize'] ??
+                                          property['fontSize'] as num?)
+                                      ?.toDouble() ??
+                                  14
+                              : (property['fontSize'] as num?)?.toDouble() ??
+                                  14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
                   ],
                 ),
         ),

@@ -28,156 +28,164 @@ appBarComponent({required DynamicWidgetData data}) {
   // isHome : boolean (click button home)
   //// }
 
-  return Container(
-    height: property['height'],
-    decoration: BoxDecoration(
-      color:
-          gradient == null ? (property['color'] ?? Colors.transparent) : null,
-      gradient: gradient,
-    ),
-    child: Center(
-      child: Container(
-        width: property['width'],
-        constraints: BoxConstraints(
-          maxWidth: property['maxWidth'],
-        ),
-        alignment: Alignment.center,
-        child: Padding(
-          padding: (property['padding'] as num?)?.toDouble() != null
-              ? EdgeInsets.all((property['padding'] as num?)?.toDouble() ?? 0)
-              : (property['verticalPadding'] as num?)?.toDouble() != null ||
-                      (property['horizontalPadding'] as num?)?.toDouble() !=
-                          null
-                  ? EdgeInsets.symmetric(
-                      vertical:
-                          (property['verticalPadding'] as num?)?.toDouble() ??
-                              0.0,
-                      horizontal:
-                          (property['horizontalPadding'] as num?)?.toDouble() ??
-                              0.0,
-                    )
-                  : EdgeInsets.only(
-                      top: (property['topPadding'] as num?)?.toDouble() ?? 0.0,
-                      bottom: (property['bottomPadding'] as num?)?.toDouble() ??
-                          0.0,
-                      left:
-                          (property['leftPadding'] as num?)?.toDouble() ?? 0.0,
-                      right:
-                          (property['rightPadding'] as num?)?.toDouble() ?? 0.0,
-                    ),
+  return LayoutBuilder(builder: (context, constraints) {
+    final isSmallScreen = constraints.maxWidth < 600;
+
+    return Container(
+      height: property['height'],
+      decoration: BoxDecoration(
+        color:
+            gradient == null ? (property['color'] ?? Colors.transparent) : null,
+        gradient: gradient,
+      ),
+      child: Center(
+        child: Container(
+          width: property['width'],
+          constraints: BoxConstraints(
+            maxWidth: property['maxWidth'],
+          ),
+          alignment: Alignment.center,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      if (isBack)
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child:
-                              backButton(size: property['backIconSize'] ?? 24),
-                        ),
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        height: property['icon'] != null ? 42 : double.infinity,
-                        child: property['icon'] == null
-                            ? property['leading']
-                            : isImageNetwork == true
-                                ? CachedNetworkImage(
-                                    imageUrl: property['icon'],
-                                    imageRenderMethodForWeb:
-                                        ImageRenderMethodForWeb.HttpGet,
-                                    placeholder: (context, url) {
-                                      return SizedBox(
-                                        width: 32,
-                                        height: 32,
-                                        child: loadingIndicator(),
-                                      );
-                                    },
-                                    imageBuilder: (context, imageProvider) {
-                                      return Container(
-                                        height: 32,
-                                        width: 32,
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image: imageProvider,
-                                            fit: BoxFit.fitWidth,
+            padding: (property['padding'] as num?)?.toDouble() != null
+                ? EdgeInsets.all((property['padding'] as num?)?.toDouble() ?? 0)
+                : (property['verticalPadding'] as num?)?.toDouble() != null ||
+                        (property['horizontalPadding'] as num?)?.toDouble() !=
+                            null
+                    ? EdgeInsets.symmetric(
+                        vertical:
+                            (property['verticalPadding'] as num?)?.toDouble() ??
+                                0.0,
+                        horizontal: (property['horizontalPadding'] as num?)
+                                ?.toDouble() ??
+                            0.0,
+                      )
+                    : EdgeInsets.only(
+                        top:
+                            (property['topPadding'] as num?)?.toDouble() ?? 0.0,
+                        bottom:
+                            (property['bottomPadding'] as num?)?.toDouble() ??
+                                0.0,
+                        left: (property['leftPadding'] as num?)?.toDouble() ??
+                            0.0,
+                        right: (property['rightPadding'] as num?)?.toDouble() ??
+                            0.0,
+                      ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        if (isBack)
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: backButton(
+                                size: property['backIconSize'] ?? 24),
+                          ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          height:
+                              property['icon'] != null ? 42 : double.infinity,
+                          child: property['icon'] == null
+                              ? property['leading']
+                              : isImageNetwork == true
+                                  ? CachedNetworkImage(
+                                      imageUrl: property['icon'],
+                                      imageRenderMethodForWeb:
+                                          ImageRenderMethodForWeb.HttpGet,
+                                      placeholder: (context, url) {
+                                        return SizedBox(
+                                          width: 32,
+                                          height: 32,
+                                          child: loadingIndicator(),
+                                        );
+                                      },
+                                      imageBuilder: (context, imageProvider) {
+                                        return Container(
+                                          height: 32,
+                                          width: 32,
+                                          decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                              image: imageProvider,
+                                              fit: BoxFit.fitWidth,
+                                            ),
                                           ),
+                                        );
+                                      },
+                                    )
+                                  : isImageAsset == true
+                                      ? Image.asset(
+                                          property['icon'],
+                                          height: 32,
+                                          width: 32,
+                                        )
+                                      : Image.asset(
+                                          property['icon'],
+                                          fit: BoxFit.fitHeight,
                                         ),
-                                      );
-                                    },
-                                  )
-                                : isImageAsset == true
-                                    ? Image.asset(
-                                        property['icon'],
-                                        height: 32,
-                                        width: 32,
-                                      )
-                                    : Image.asset(
-                                        property['icon'],
-                                        fit: BoxFit.fitHeight,
-                                      ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (property['title'] != null)
-                            const SizedBox(width: 12),
-                          if (property['title'] != null)
-                            textTitle(
-                              title: property['title'],
-                              size: 18,
-                              fontWeight: FontWeight.bold,
-                              color: property['titleColor'] ?? AppTheme.primary,
-                            ),
-                          if (property['subTitle'] != null)
-                            const SizedBox(width: 12),
-                          if (property['subTitle'] != null)
-                            textTitle(
-                              title: property['subTitle'],
-                              size: 14,
-                              color: (property['subTitleColor'] ??
-                                      AppTheme.primary)
-                                  .withAlpha(200),
-                            ),
-                        ],
-                      ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (property['title'] != null)
+                              const SizedBox(width: 12),
+                            if (property['title'] != null)
+                              textTitle(
+                                title: property['title'],
+                                size: 18,
+                                fontWeight: FontWeight.bold,
+                                color:
+                                    property['titleColor'] ?? AppTheme.primary,
+                              ),
+                            if (property['subTitle'] != null)
+                              const SizedBox(width: 12),
+                            if (property['subTitle'] != null)
+                              textTitle(
+                                title: property['subTitle'],
+                                size: 14,
+                                color: (property['subTitleColor'] ??
+                                        AppTheme.primary)
+                                    .withAlpha(200),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (property['action'] != null)
+                        Row(
+                          children: (property['action'] as List)
+                              .map<Widget>(
+                                  (e) => DynamicWidgetFactory.createWidget(e))
+                              .toList(),
+                        ),
+                      isHome == true
+                          ? iconButtonWidget(
+                              icon: Icons.home,
+                              iconColor: AppTheme.primary,
+                              iconSize: 24,
+                              action: () {
+                                Get.offAllNamed('/main');
+                              },
+                            )
+                          : Container(),
+                      const SizedBox(width: 12),
                     ],
                   ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (property['action'] != null)
-                      Row(
-                        children: (property['action'] as List)
-                            .map<Widget>(
-                                (e) => DynamicWidgetFactory.createWidget(e))
-                            .toList(),
-                      ),
-                    isHome == true
-                        ? iconButtonWidget(
-                            icon: Icons.home,
-                            iconColor: AppTheme.primary,
-                            iconSize: 24,
-                            action: () {
-                              Get.offAllNamed('/main');
-                            },
-                          )
-                        : Container(),
-                    const SizedBox(width: 12),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  });
 }
 
 loadingIndicator({
