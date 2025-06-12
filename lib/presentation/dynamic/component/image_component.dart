@@ -12,8 +12,6 @@ imageComponent({required DynamicWidgetData data}) {
       height: (property['height'] as num?)?.toDouble(),
       width: (property['width'] as num?)?.toDouble(),
       repeat: property['repeat'] ?? ImageRepeat.noRepeat,
-      // property['icon'] ?? Icons.add_rounded,
-      // color: property['color'] ?? AppTheme.primary,
     ),
   );
 }

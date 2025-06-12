@@ -14,6 +14,7 @@ textComponent({required data}) {
       fontWeight: parseFontWeight(property['fontWeight']),
       overflow: property['overflow'] ?? TextOverflow.ellipsis,
     ),
+    textAlign: property['textAlign'] ?? TextAlign.start,
     softWrap: property['softWrap'] ?? false,
   );
 }

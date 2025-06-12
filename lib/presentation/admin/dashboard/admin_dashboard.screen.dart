@@ -12,7 +12,7 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: smallScreen() ?? controller.buildBody(),
+      body: smallScreen(child: controller.buildBody()),
     );
   }
 }
