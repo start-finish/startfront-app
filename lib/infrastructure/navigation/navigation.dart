@@ -61,5 +61,10 @@ class Nav {
       page: () => const AdminWidgetManagementScreen(),
       binding: AdminWidgetManagementControllerBinding(),
     ),
+    GetPage(
+      name: Routes.ADMIN_PLATFORMS_SCREENS,
+      page: () => const AdminPlatformsScreensScreen(),
+      binding: AdminPlatformsScreensControllerBinding(),
+    ),
   ];
 }

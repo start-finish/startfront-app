@@ -18,7 +18,7 @@ class AdminDashboardController extends GetxController {
       'subTitle': 'Manage and edit StartFront UI screens',
       'icon': 'assets/svg/platform.svg',
       'color': Colors.blue,
-      'route': '/',
+      'route': '/admin-platforms-screens',
     },
     {
       'title': 'Navigation Menus',
