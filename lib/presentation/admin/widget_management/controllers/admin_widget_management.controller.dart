@@ -75,16 +75,6 @@ class AdminWidgetManagementController extends GetxController {
     return (screenWidth - ((5 + 1) * spacing)) / 5;
   }
 
-  // buildBody() {
-  //   return LayoutBuilder(
-  //     builder: (context, constraints) {
-  //       final isSmallScreen = constraints.maxWidth < 600;
-
-  //       return Text('${constraints.maxWidth}');
-  //     },
-  //   );
-  // }
-
   // TODO: create layout component to check phone size cannot use
 
   buildBody() {
