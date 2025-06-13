@@ -206,7 +206,7 @@ loadingIndicator({
 backButton({required double size}) {
   return TouchRippleEffect(
     onTap: () => Get.back(result: 'refresh'),
-    rippleColor: Colors.white24,
+    rippleColor: Colors.black26,
     borderRadius: BorderRadius.circular(50),
     child: Container(
       decoration: const BoxDecoration(
