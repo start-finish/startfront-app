@@ -17,6 +17,9 @@ class DynamicWidgetData {
     DynamicWidgetData? child,
     List<DynamicWidgetData>? children,
   }) : properties = RxMap<String, dynamic>(properties) {
+    if (type == 'SnackBar') {
+      DynamicWidgetFactory.createWidget(this);
+    }
     if (child != null) {
       _child = child;
       _children = [];
@@ -45,8 +48,8 @@ class DynamicWidgetData {
 
   // Converts DynamicWidgetData to an actual Widget using DynamicWidgetFactory
   Widget toWidget() => Obx(() {
-      return DynamicWidgetFactory.createWidget(this);
-    });
+        return DynamicWidgetFactory.createWidget(this);
+      });
 
   Map<String, dynamic> toJson() => {
         'type': type,

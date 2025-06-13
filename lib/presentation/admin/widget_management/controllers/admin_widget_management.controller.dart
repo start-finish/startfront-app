@@ -125,7 +125,15 @@ class AdminWidgetManagementController extends GetxController {
                       'radius': 8,
                       'fontSize': 14,
                       'iconSize': 18,
-                      'action': () => print('Create Widget'),
+                      'action': () {
+                        DynamicWidgetData(
+                          type: 'SnackBar',
+                          properties: {
+                            'title': 'Success',
+                            'message': 'Your data was saved',
+                          },
+                        ).toWidget();
+                      },
                     },
                   ),
                 ],

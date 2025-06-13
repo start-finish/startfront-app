@@ -17,6 +17,7 @@ import '../component/row_component.dart';
 import '../component/row_list_component.dart';
 import '../component/scroll_component.dart';
 import '../component/sizedbox_component.dart';
+import '../component/snackbar_component.dart';
 import '../component/stack_component.dart';
 import '../component/svg_image_component.dart';
 import '../component/text_component.dart';
@@ -60,6 +61,9 @@ class DynamicWidgetFactory {
         return svgImageComponent(data: widgetData);
       case 'Rotate':
         return rotateComponent(data: widgetData);
+      case 'SnackBar':
+        showSnackbarComponent(data: widgetData); // ✅ Trigger the snackbar
+        return const SizedBox.shrink();
 
       // children widget
       case 'Column':
