@@ -43,6 +43,7 @@ class _HoverRippleButtonState extends State<HoverRippleButton> {
     final gradient = gradientFromKey(gradientKey);
 
     final isButton = property['isButton'] ?? false;
+    final isExpanded = property['isExpanded'] ?? false;
 
     return MouseRegion(
       onEnter: (_) => setState(() => isHovered = true),
@@ -62,7 +63,7 @@ class _HoverRippleButtonState extends State<HoverRippleButton> {
             : BorderRadius.circular(
                 (property['radius'] as num?)?.toDouble() ?? 12),
         child: AnimatedContainer(
-          width: property['width'],
+          width: isExpanded ? double.infinity : property['width'],
           height: property['height'],
           duration: const Duration(milliseconds: 150),
           padding: (property['padding'] as num?)?.toDouble() != null
@@ -123,15 +124,15 @@ class _HoverRippleButtonState extends State<HoverRippleButton> {
                         width: isHovered
                             ? (property['hoverSvgIconSize'] as num?)
                                     ?.toDouble() ??
-                                18
+                                20
                             : (property['svgIconSize'] as num?)?.toDouble() ??
-                                18,
+                                20,
                         height: isHovered
                             ? (property['hoverSvgIconSize'] as num?)
                                     ?.toDouble() ??
-                                18
+                                20
                             : (property['svgIconSize'] as num?)?.toDouble() ??
-                                18,
+                                20,
                         color: isHovered
                             ? property['hoverSvgIconColor'] ??
                                 property['svgIconColor'] ??

@@ -5,7 +5,6 @@ import '../data/factory.dart';
 
 flexibleWrapComponent({required DynamicWidgetData data}) {
   final property = data.properties;
-  final double? aspectRatio = property['aspectRatio'];
 
   return FlexibleWrap(
     spacing: property['spacing'] ?? 0.0,

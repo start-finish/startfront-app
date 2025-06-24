@@ -11,9 +11,15 @@ class AdminPlatformsScreensScreen
   const AdminPlatformsScreensScreen({super.key});
   @override
   Widget build(BuildContext context) {
-   return Scaffold(
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    return Scaffold(
       backgroundColor: AppTheme.background,
-      body: smallScreen(child: controller.buildBody()),
+      body: smallScreen(
+        child: Obx(() {
+          return controller.buildBody(screenWidth);
+        }),
+      ),
     );
   }
 }

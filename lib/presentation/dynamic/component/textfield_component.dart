@@ -47,29 +47,47 @@ Widget textFieldComponent({required DynamicWidgetData data}) {
                 ? data.properties['errorText']
                 : null,
             errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppTheme.error),
+              borderSide: BorderSide(
+                  color: data.properties['borderColor'] ?? AppTheme.error),
               borderRadius: BorderRadius.circular(
                 (data.properties['borderRadius'] as num?)?.toDouble() ?? 12,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppTheme.error),
+              borderSide: BorderSide(
+                  color: data.properties['borderColor'] ?? AppTheme.error),
               borderRadius: BorderRadius.circular(
                 (data.properties['borderRadius'] as num?)?.toDouble() ?? 12,
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppTheme.primary),
+              borderSide: BorderSide(
+                  color: data.properties['borderColor'] ?? AppTheme.primary),
               borderRadius: BorderRadius.circular(
                 (data.properties['borderRadius'] as num?)?.toDouble() ?? 12,
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppTheme.primary),
+              borderSide: BorderSide(
+                  color: data.properties['borderColor'] ?? AppTheme.primary),
               borderRadius: BorderRadius.circular(
                 (data.properties['borderRadius'] as num?)?.toDouble() ?? 12,
               ),
             ),
+            // prefixIcon: data.properties['svgIcon'] != null
+            //     ? SvgPicture.asset(
+            //         data.properties['svgIcon'],
+            //         color: data.properties['color'] ?? AppTheme.onBackground,
+            //       )
+            //     : null,
+            prefixIcon:data.properties['prefixIcon'] != null ? Icon(
+              data.properties['prefixIcon'],
+              color: data.properties['color'] ?? AppTheme.onBackground,
+            ) : null,
+            // prefixIconConstraints: BoxConstraints(
+            //   maxWidth: data.properties['width'] ?? 18,
+            //   maxHeight: data.properties['height'] ?? 18,
+            // ),
             filled: true,
             fillColor: AppTheme.onPrimary,
           ),

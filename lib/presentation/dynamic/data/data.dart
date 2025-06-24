@@ -17,8 +17,10 @@ class DynamicWidgetData {
     DynamicWidgetData? child,
     List<DynamicWidgetData>? children,
   }) : properties = RxMap<String, dynamic>(properties) {
-    if (type == 'SnackBar') {
-      DynamicWidgetFactory.createWidget(this);
+    if (type == 'SnackBar' || type == 'Alert') {
+      Future.delayed(Duration.zero, () {
+        DynamicWidgetFactory.createWidget(this);
+      });
     }
     if (child != null) {
       _child = child;

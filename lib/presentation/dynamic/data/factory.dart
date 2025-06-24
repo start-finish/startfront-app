@@ -6,6 +6,7 @@ import '../component/center_component.dart';
 import '../component/column_component.dart';
 import '../component/column_list_component.dart';
 import '../component/container_component.dart';
+import '../component/dropdown_component.dart';
 import '../component/expand_component.dart';
 import '../component/flexible_component.dart';
 import '../component/icon_component.dart';
@@ -16,6 +17,7 @@ import '../component/rotate_component.dart';
 import '../component/row_component.dart';
 import '../component/row_list_component.dart';
 import '../component/scroll_component.dart';
+import '../component/show_alert_component.dart';
 import '../component/sizedbox_component.dart';
 import '../component/snackbar_component.dart';
 import '../component/stack_component.dart';
@@ -52,7 +54,12 @@ class DynamicWidgetFactory {
       case 'Flexible':
         return flexibleComponent(data: widgetData);
       case 'Button':
-        return HoverRippleButton(data: widgetData);
+        final button = HoverRippleButton(data: widgetData);
+        if (widgetData.properties['isExpanded'] == true) {
+          return Expanded(child: button);
+        } else {
+          return button;
+        }
       case 'Icon':
         return iconComponent(data: widgetData);
       case 'Image':
@@ -62,8 +69,13 @@ class DynamicWidgetFactory {
       case 'Rotate':
         return rotateComponent(data: widgetData);
       case 'SnackBar':
-        showSnackbarComponent(data: widgetData); // ✅ Trigger the snackbar
+        showSnackbarComponent(data: widgetData);
         return const SizedBox.shrink();
+      case 'Alert':
+        showAlertComponent(data: widgetData);
+        return const SizedBox.shrink();
+      case 'Dropdown':
+        return dropdownComponent(data: widgetData);
 
       // children widget
       case 'Column':

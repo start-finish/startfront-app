@@ -25,7 +25,9 @@ void showSnackbarComponent({required DynamicWidgetData data}) {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: AppTheme.success,
+            color: property['isSuccess'] == null
+                ? AppTheme.primary
+                : (property['isSuccess'] ? AppTheme.success : AppTheme.error),
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(
@@ -39,12 +41,15 @@ void showSnackbarComponent({required DynamicWidgetData data}) {
             spacing: 16,
             mainAxisSize: MainAxisSize.min,
             children: [
-              SvgPicture.asset(
-                'assets/svg/check-double.svg',
-                color: property['color'] ?? AppTheme.onPrimary,
-                width: property['width'] ?? 24,
-                height: property['height'] ?? 24,
-              ),
+              if (property['isSuccess'] != null)
+                SvgPicture.asset(
+                  property['isSuccess']
+                      ? 'assets/svg/check-circle.svg'
+                      : 'assets/svg/wrong.svg',
+                  color: property['color'] ?? AppTheme.onPrimary,
+                  width: property['width'] ?? 24,
+                  height: property['height'] ?? 24,
+                ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -73,7 +78,7 @@ void showSnackbarComponent({required DynamicWidgetData data}) {
 
   overlay.insert(_snackbarOverlay!);
 
-  Future.delayed(const Duration(seconds: 3), () {
+  Future.delayed(const Duration(seconds: 5), () {
     _snackbarOverlay?.remove();
     _snackbarOverlay = null;
   });

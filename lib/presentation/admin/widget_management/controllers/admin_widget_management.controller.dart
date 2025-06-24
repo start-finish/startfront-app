@@ -127,10 +127,28 @@ class AdminWidgetManagementController extends GetxController {
                       'iconSize': 18,
                       'action': () {
                         DynamicWidgetData(
-                          type: 'SnackBar',
+                          type: 'Alert',
                           properties: {
-                            'title': 'Success',
-                            'message': 'Your data was saved',
+                            
+                            'title': 'Fill Info',
+                            'content':
+                                DynamicWidgetData(type: 'Column', properties: {
+                              'mainAxisSize': 'min',
+                            }, children: [
+                              DynamicWidgetData(
+                                  type: 'Text',
+                                  properties: {'text': 'Enter your email'}),
+                              DynamicWidgetData(
+                                  type: 'TextField',
+                                  properties: {'controllerKey': 'emailField'}),
+                            ]),
+                            'confirmText': 'Submit',
+                            'onConfirm': () {
+                              final email = Get.find<TextEditingController>(
+                                      tag: 'emailField')
+                                  .text;
+                              print('Email: $email');
+                            },
                           },
                         ).toWidget();
                       },

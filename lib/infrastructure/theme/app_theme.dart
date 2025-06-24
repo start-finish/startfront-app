@@ -52,6 +52,15 @@ class AppTheme {
         end: Alignment.bottomCenter,
       );
 
+  /// Gradient example for totery color
+  static LinearGradient get toteryGradient => LinearGradient(
+        colors: isDark
+            ? [const Color(0xFF0091EA), const Color(0xFF006DB3)]
+            : [const Color(0xFFDDEEFC), const Color(0xC8B2CCE2)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+
   /// Gradient for success color
   static LinearGradient get successGradient => LinearGradient(
         colors: isDark

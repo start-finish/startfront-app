@@ -171,16 +171,18 @@ ScrollPhysics getAdaptiveScrollPhysics() {
   }
 }
 
- // Get gradient from property key, fallback to null
-  LinearGradient? gradientFromKey(String? key) {
-    switch (key) {
-      case 'primary':
-        return AppTheme.primaryGradient;
-      case 'secondary':
-        return AppTheme.secondaryGradient;
-      case 'success':
-        return AppTheme.successGradient;
-      default:
-        return null;
-    }
+// Get gradient from property key, fallback to null
+LinearGradient? gradientFromKey(String? key) {
+  switch (key) {
+    case 'primary':
+      return AppTheme.primaryGradient;
+    case 'secondary':
+      return AppTheme.secondaryGradient;
+    case 'totery':
+      return AppTheme.toteryGradient;
+    case 'success':
+      return AppTheme.successGradient;
+    default:
+      return null;
   }
+}
