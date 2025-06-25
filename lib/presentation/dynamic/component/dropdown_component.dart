@@ -80,6 +80,7 @@ Widget dropdownComponent({required DynamicWidgetData data}) {
                     selectedItem,
                     style: TextStyle(
                       fontSize: 13,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],

@@ -66,5 +66,10 @@ class Nav {
       page: () => const AdminPlatformsScreensScreen(),
       binding: AdminPlatformsScreensControllerBinding(),
     ),
+    GetPage(
+      name: Routes.EDITOR,
+      page: () => const EditorScreen(),
+      binding: EditorControllerBinding(),
+    ),
   ];
 }

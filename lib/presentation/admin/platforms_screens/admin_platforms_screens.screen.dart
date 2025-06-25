@@ -17,7 +17,7 @@ class AdminPlatformsScreensScreen
       backgroundColor: AppTheme.background,
       body: smallScreen(
         child: Obx(() {
-          return controller.buildBody(screenWidth);
+          return controller.buildBody();
         }),
       ),
     );

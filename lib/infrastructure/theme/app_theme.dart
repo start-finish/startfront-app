@@ -56,9 +56,7 @@ class AppTheme {
   static LinearGradient get toteryGradient => LinearGradient(
         colors: isDark
             ? [const Color(0xFF0091EA), const Color(0xFF006DB3)]
-            : [const Color(0xFFDDEEFC), const Color(0xC8B2CCE2)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+            : [const Color(0xFFF0F0F7), const Color(0xA2E2E8FE)],
       );
 
   /// Gradient for success color
