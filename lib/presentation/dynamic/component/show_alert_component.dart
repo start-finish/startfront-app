@@ -20,8 +20,13 @@ showAlertComponent({required DynamicWidgetData data}) {
   Get.dialog(
     AlertDialog(
       title: props['title'] != null
-          ? Text(props['title'],
-              style: const TextStyle(fontWeight: FontWeight.bold))
+          ? Text(
+              props['title'],
+              style: TextStyle(
+                color: props['titleColor'] ?? AppTheme.onBackground,
+                fontWeight: FontWeight.bold,
+              ),
+            )
           : null,
       content: contentWidget ?? messageWidget,
       backgroundColor: AppTheme.onPrimary,

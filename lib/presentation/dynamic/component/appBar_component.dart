@@ -156,7 +156,7 @@ appBarComponent({required DynamicWidgetData data}) {
                     ),
                   ),
                   Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisSize: MainAxisSize.max,
                     children: [
                       if (property['action'] != null)
                         Row(
@@ -207,10 +207,10 @@ backButton({required double size}) {
   return TouchRippleEffect(
     onTap: () => Get.back(result: 'refresh'),
     rippleColor: Colors.black26,
-    borderRadius: BorderRadius.circular(50),
+    borderRadius: BorderRadius.circular(12),
     child: Container(
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: const EdgeInsets.all(6),

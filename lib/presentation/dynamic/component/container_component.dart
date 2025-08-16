@@ -74,9 +74,22 @@ containerComponent({required DynamicWidgetData data}) {
       maxWidth: (property['width'] as num?)?.toDouble() ??
           (property['maxWidth'] as num?)?.toDouble() ??
           double.infinity,
+      minHeight: (property['height'] as num?)?.toDouble() ??
+          (property['minHeight'] as num?)?.toDouble() ??
+          0.0,
+      maxHeight: (property['maxHeight'] as num?)?.toDouble() ??
+          (property['height'] as num?)?.toDouble() ??
+          double.infinity,
     ),
     child: data.child != null
         ? DynamicWidgetFactory.createWidget(data.child!)
         : null,
   );
+
+  double? maxHeight;
+  if (property['maxHeight'] != null) {
+    maxHeight = (property['maxHeight'] as num).toDouble();
+  } else if (property['height'] != null) {
+    maxHeight = (property['height'] as num).toDouble();
+  }
 }

@@ -60,8 +60,6 @@ class SignupController extends GetxController {
   //   );
   // }
 
-  // TODO: check validation
-
   buildBody() {
     return DynamicWidgetData(
       type: 'Container',
@@ -183,11 +181,11 @@ class SignupController extends GetxController {
                   DynamicWidgetData(
                     type: 'Button',
                     properties: {
+                      'borderColor': Colors.transparent,
+                      'hoverBorderColor': Colors.transparent,
                       'hoverColor': Colors.transparent,
-                      'action': () {
-                        // TODO:
-                        Get.offAllNamed('/login');
-                      }
+                      'hoverBorderWidth': 0,
+                      'action': () => Get.offAllNamed('/login')
                     },
                     child: DynamicWidgetData(
                       type: 'Text',

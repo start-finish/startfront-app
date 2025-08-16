@@ -145,14 +145,16 @@ class AdminDashboardController extends GetxController {
                     properties: {
                       'rippleColor': Colors.black26,
                       'borderColor': AppTheme.onSurface,
+                      'hoverBorderColor': AppTheme.primary,
+                      'color': AppTheme.surface,
                       'borderWidth': 1,
+                      'hoverBorderWidth': 2,
                       'title': 'Logout',
                       'svgIcon': 'assets/svg/log-out.svg',
                       'svgIconColor': AppTheme.onSurface,
-                      'hoverSvgIconColor': AppTheme.onPrimary,
-                      'hoverColor': AppTheme.primary,
+                      'hoverSvgIconColor': AppTheme.primary,
                       'textColor': AppTheme.onSurface,
-                      'hoverTextColor': AppTheme.onPrimary,
+                      'hoverTextColor': AppTheme.primary,
                       'horizontalPadding': 16,
                       'verticalPadding': 8,
                       'radius': 8,
@@ -296,7 +298,13 @@ class AdminDashboardController extends GetxController {
                                 properties: {
                                   'radius': 16,
                                   'rippleColor': Colors.black26,
+                                  'color': AppTheme.onSecondary,
                                   'width': double.infinity,
+                                  'borderWidth': 1,
+                                  'hoverBorderWidth': 2,
+                                  'borderColor':
+                                      AppTheme.onSurface.withOpacity(0.15),
+                                  'hoverBorderColor': AppTheme.primary,
                                   'action': () => item['route'] != '/'
                                       ? Get.toNamed(item['route'])
                                       : null,
@@ -304,12 +312,8 @@ class AdminDashboardController extends GetxController {
                                 child: DynamicWidgetData(
                                   type: 'Container',
                                   properties: {
-                                    'color': AppTheme.onSecondary,
                                     'padding': 24,
                                     'radius': 16,
-                                    'borderWidth': 1,
-                                    'borderColor':
-                                        AppTheme.onSurface.withOpacity(0.15),
                                   },
                                   child: DynamicWidgetData(
                                     type: 'Row',
@@ -322,8 +326,8 @@ class AdminDashboardController extends GetxController {
                                         type: 'Container',
                                         properties: {
                                           'color': item['color'],
-                                          'padding': 8,
-                                          'radius': 8,
+                                          'padding': 12,
+                                          'radius': 12,
                                         },
                                         child: DynamicWidgetData(
                                           type: 'SvgImage',
@@ -358,7 +362,6 @@ class AdminDashboardController extends GetxController {
                                                 'text': item['subTitle'],
                                                 'color': AppTheme.secondary,
                                                 'softWrap': true,
-                                                // 'maxLines': 2,
                                               },
                                             ),
                                           ],
@@ -409,7 +412,13 @@ class AdminDashboardController extends GetxController {
                                 properties: {
                                   'radius': 16,
                                   'rippleColor': Colors.black26,
+                                  'color': AppTheme.onSecondary,
                                   'width': double.infinity,
+                                  'borderWidth': 1,
+                                  'hoverBorderWidth': 2,
+                                  'borderColor':
+                                      AppTheme.onSurface.withOpacity(0.15),
+                                  'hoverBorderColor': AppTheme.primary,
                                   'action': () => item['route'] != '/'
                                       ? Get.toNamed(item['route'])
                                       : null,
@@ -417,12 +426,8 @@ class AdminDashboardController extends GetxController {
                                 child: DynamicWidgetData(
                                   type: 'Container',
                                   properties: {
-                                    'color': AppTheme.onSecondary,
                                     'padding': 24,
                                     'radius': 16,
-                                    'borderWidth': 1,
-                                    'borderColor':
-                                        AppTheme.onSurface.withOpacity(0.15),
                                   },
                                   child: DynamicWidgetData(
                                     type: 'Row',
@@ -435,8 +440,8 @@ class AdminDashboardController extends GetxController {
                                         type: 'Container',
                                         properties: {
                                           'color': item['color'],
-                                          'padding': 8,
-                                          'radius': 8,
+                                          'padding': 12,
+                                          'radius': 12,
                                         },
                                         child: DynamicWidgetData(
                                           type: 'SvgImage',
@@ -471,7 +476,6 @@ class AdminDashboardController extends GetxController {
                                                 'text': item['subTitle'],
                                                 'color': AppTheme.secondary,
                                                 'softWrap': true,
-                                                // 'maxLines': 2,
                                               },
                                             ),
                                           ],

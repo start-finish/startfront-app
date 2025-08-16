@@ -23,7 +23,7 @@ Widget textFieldComponent({required DynamicWidgetData data}) {
             style: TextStyle(
               color: data.properties['showError']
                   ? AppTheme.error
-                  : AppTheme.primary,
+                  : data.properties['labelColor'] ?? AppTheme.primary,
               fontSize: 13,
               fontWeight: data.properties['showError']
                   ? FontWeight.bold
@@ -80,10 +80,12 @@ Widget textFieldComponent({required DynamicWidgetData data}) {
             //         color: data.properties['color'] ?? AppTheme.onBackground,
             //       )
             //     : null,
-            prefixIcon:data.properties['prefixIcon'] != null ? Icon(
-              data.properties['prefixIcon'],
-              color: data.properties['color'] ?? AppTheme.onBackground,
-            ) : null,
+            prefixIcon: data.properties['prefixIcon'] != null
+                ? Icon(
+                    data.properties['prefixIcon'],
+                    color: data.properties['color'] ?? AppTheme.onBackground,
+                  )
+                : null,
             // prefixIconConstraints: BoxConstraints(
             //   maxWidth: data.properties['width'] ?? 18,
             //   maxHeight: data.properties['height'] ?? 18,

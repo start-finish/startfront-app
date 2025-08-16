@@ -180,15 +180,18 @@ class LoginController extends GetxController {
                   DynamicWidgetData(
                     type: 'Button',
                     properties: {
+                      'borderColor': Colors.transparent,
+                      'hoverBorderColor': Colors.transparent,
                       'hoverColor': Colors.transparent,
+                      'hoverBorderWidth': 0,
                       'action': () => Get.offAllNamed('/signup'),
                     },
                     child: DynamicWidgetData(
                       type: 'Text',
                       properties: {
                         'text': 'Sign up',
-                        'fontWeight': 'bold',
                         'color': AppTheme.primary,
+                        'fontWeight': 'bold',
                         'fontSize': 12,
                       },
                     ),

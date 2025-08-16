@@ -6,12 +6,15 @@ import '../component/center_component.dart';
 import '../component/column_component.dart';
 import '../component/column_list_component.dart';
 import '../component/container_component.dart';
+import '../component/drag_component.dart';
+import '../component/drop_component.dart';
 import '../component/dropdown_component.dart';
 import '../component/expand_component.dart';
 import '../component/flexible_component.dart';
 import '../component/icon_component.dart';
 import '../component/image_component.dart';
 import '../component/list_view_component.dart';
+import '../component/obx_component.dart';
 import '../component/padding_component.dart';
 import '../component/rotate_component.dart';
 import '../component/row_component.dart';
@@ -76,6 +79,12 @@ class DynamicWidgetFactory {
         return const SizedBox.shrink();
       case 'Dropdown':
         return dropdownComponent(data: widgetData);
+      case 'Obx':
+        return obxComponent(data: widgetData);
+      case 'Drag':
+        return dragComponent(data: widgetData);
+      case 'Drop':
+        return dropComponent(data: widgetData);
 
       // children widget
       case 'Column':

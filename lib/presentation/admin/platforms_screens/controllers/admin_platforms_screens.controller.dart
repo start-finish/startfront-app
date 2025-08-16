@@ -112,8 +112,8 @@ class AdminPlatformsScreensController extends GetxController {
                   DynamicWidgetData(
                     type: 'Button',
                     properties: {
-                      'borderColor': AppTheme.onSurface,
                       'borderWidth': 1,
+                      'hoverBorderWidth': 2,
                       'title': 'Create Widget',
                       'svgIcon': 'assets/svg/add.svg',
                       'svgIconColor': AppTheme.onPrimary,
@@ -416,7 +416,10 @@ class AdminPlatformsScreensController extends GetxController {
                                       },
                                       child: DynamicWidgetData(
                                         type: 'Column',
-                                        properties: {},
+                                        properties: {
+                                          'spacing': 12,
+                                          'mainAxisSize': 'min'
+                                        },
                                         children: [
                                           DynamicWidgetData(
                                             type: 'Row',
@@ -470,12 +473,6 @@ class AdminPlatformsScreensController extends GetxController {
                                                           ? AppTheme.success
                                                           : AppTheme
                                                               .onBackground,
-                                                  'hoverColor':
-                                                      (item['status'] == '1'
-                                                              ? AppTheme.success
-                                                              : AppTheme
-                                                                  .onBackground)
-                                                          .withOpacity(0.8),
                                                   'color': item['status'] == '1'
                                                       ? AppTheme.success
                                                       : AppTheme.onBackground,
@@ -506,10 +503,6 @@ class AdminPlatformsScreensController extends GetxController {
                                             },
                                           ),
                                           DynamicWidgetData(
-                                            type: 'SizedBox',
-                                            properties: {'height': 12},
-                                          ),
-                                          DynamicWidgetData(
                                             type: 'Text',
                                             properties: {
                                               'text':
@@ -519,140 +512,146 @@ class AdminPlatformsScreensController extends GetxController {
                                             },
                                           ),
                                           DynamicWidgetData(
-                                            type: 'SizedBox',
-                                            properties: {'height': 12},
-                                          ),
-                                          DynamicWidgetData(
-                                            type: 'Row',
+                                            type: 'Container',
                                             properties: {
-                                              'mainAxisSize': 'max',
-                                              'mainAxisAlignment':
-                                                  'spaceBetween',
-                                              'spacing': 12,
+                                              'height': 40,
                                             },
-                                            children: [
-                                              // NOTE: edit button
-                                              DynamicWidgetData(
-                                                type: 'Button',
-                                                properties: {
-                                                  'isExpanded': true,
-                                                  'rippleColor': Colors.black26,
-                                                  'color': AppTheme.primary,
-                                                  'borderColor': AppTheme
-                                                      .onSurface
-                                                      .withOpacity(0.25),
-                                                  'borderWidth': 1,
-                                                  'title': 'Edit',
-                                                  'svgIcon':
-                                                      'assets/svg/edit.svg',
-                                                  'svgIconColor':
-                                                      AppTheme.onPrimary,
-                                                  'hoverSvgIconColor':
-                                                      AppTheme.onPrimary,
-                                                  'hoverColor': AppTheme.primary
-                                                      .withAlpha(200),
-                                                  'textColor':
-                                                      AppTheme.onPrimary,
-                                                  'hoverTextColor':
-                                                      AppTheme.onPrimary,
-                                                  'horizontalPadding': 16,
-                                                  'verticalPadding': 8,
-                                                  'radius': 8,
-                                                  'fontSize': 14,
-                                                  'iconSize': 18,
-                                                  'action': () => Get.offAllNamed('/login'),
-                                                },
-                                              ),
-                                              DynamicWidgetData(
-                                                type: 'Row',
-                                                properties: {
-                                                  'spacing': 12,
-                                                },
-                                                children: [
-                                                  // NOTE: view button
-                                                  DynamicWidgetData(
-                                                    type: 'Button',
-                                                    properties: {
-                                                      'rippleColor':
-                                                          Colors.black26,
-                                                      'borderColor': AppTheme
-                                                          .onSurface
-                                                          .withOpacity(0.2),
-                                                      'borderWidth': 1,
-                                                      'isButton': true,
-                                                      'svgIcon':
-                                                          'assets/svg/eye-open.svg',
-                                                      'svgIconColor':
-                                                          AppTheme.onSurface,
-                                                      'hoverSvgIconColor':
-                                                          AppTheme.onPrimary,
-                                                      'hoverColor': AppTheme
-                                                          .onSurface
-                                                          .withAlpha(200),
-                                                      'padding': 8,
-                                                      'radius': 8,
-                                                      'fontSize': 14,
-                                                      'iconSize': 18,
-                                                      'action': () {},
-                                                    },
-                                                  ),
-                                                  // NOTE: copy button
-                                                  DynamicWidgetData(
-                                                    type: 'Button',
-                                                    properties: {
-                                                      'rippleColor':
-                                                          Colors.black26,
-                                                      'borderColor': AppTheme
-                                                          .onSurface
-                                                          .withOpacity(0.2),
-                                                      'borderWidth': 1,
-                                                      'isButton': true,
-                                                      'svgIcon':
-                                                          'assets/svg/copy.svg',
-                                                      'svgIconColor':
-                                                          AppTheme.onSurface,
-                                                      'hoverSvgIconColor':
-                                                          AppTheme.onPrimary,
-                                                      'hoverColor': AppTheme
-                                                          .onSurface
-                                                          .withAlpha(200),
-                                                      'padding': 8,
-                                                      'radius': 8,
-                                                      'fontSize': 14,
-                                                      'iconSize': 18,
-                                                      'action': () {},
-                                                    },
-                                                  ),
-                                                  // NOTE: delete button
-                                                  DynamicWidgetData(
-                                                    type: 'Button',
-                                                    properties: {
-                                                      'rippleColor':
-                                                          Colors.black26,
-                                                      'borderColor': AppTheme
-                                                          .onSurface
-                                                          .withOpacity(0.2),
-                                                      'borderWidth': 1,
-                                                      'isButton': true,
-                                                      'svgIcon':
-                                                          'assets/svg/delete.svg',
-                                                      'svgIconColor':
-                                                          AppTheme.error,
-                                                      'hoverSvgIconColor':
-                                                          AppTheme.onPrimary,
-                                                      'hoverColor': AppTheme
-                                                          .error
-                                                          .withAlpha(200),
-                                                      'padding': 8,
-                                                      'radius': 8,
-                                                      'fontSize': 14,
-                                                      'iconSize': 18,
-                                                      'action': () {},
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
+                                            child: DynamicWidgetData(
+                                              type: 'Row',
+                                              properties: {
+                                                'mainAxisSize': 'max',
+                                                'mainAxisAlignment':
+                                                    'spaceBetween',
+                                                'crossAxisAlignment': 'center',
+                                                'spacing': 12,
+                                              },
+                                              children: [
+                                                // NOTE: edit button
+                                                DynamicWidgetData(
+                                                  type: 'Button',
+                                                  properties: {
+                                                    'isExpanded': true,
+                                                    'hoverBorderWidth': 2,
+                                                    'rippleColor':
+                                                        Colors.black26,
+                                                    'color': AppTheme.primary,
+                                                    'borderWidth': 1,
+                                                    'title': 'Edit',
+                                                    'svgIcon':
+                                                        'assets/svg/edit.svg',
+                                                    'svgIconColor':
+                                                        AppTheme.onPrimary,
+                                                    'hoverSvgIconColor':
+                                                        AppTheme.onPrimary,
+                                                    'textColor':
+                                                        AppTheme.onPrimary,
+                                                    'hoverTextColor':
+                                                        AppTheme.onPrimary,
+                                                    'horizontalPadding': 16,
+                                                    'verticalPadding': 8,
+                                                    'radius': 8,
+                                                    'fontSize': 14,
+                                                    'iconSize': 18,
+                                                    'action': () =>
+                                                        Get.toNamed('/editor'),
+                                                  },
+                                                ),
+                                                DynamicWidgetData(
+                                                  type: 'Row',
+                                                  properties: {
+                                                    'spacing': 12,
+                                                    'crossAxisAlignment':
+                                                        'center',
+                                                  },
+                                                  children: [
+                                                    // NOTE: view button
+                                                    DynamicWidgetData(
+                                                      type: 'Button',
+                                                      properties: {
+                                                        'color':
+                                                            Colors.transparent,
+                                                        'hoverBorderWidth': 2,
+                                                        'rippleColor':
+                                                            Colors.black26,
+                                                        'borderColor': AppTheme
+                                                            .onSurface
+                                                            .withOpacity(0.2),
+                                                        'borderWidth': 1,
+                                                        'isButton': true,
+                                                        'svgIcon':
+                                                            'assets/svg/eye-open.svg',
+                                                        'svgIconColor':
+                                                            AppTheme.onSurface,
+                                                        'hoverColor': AppTheme
+                                                            .onSurface
+                                                            .withAlpha(30),
+                                                        'padding': 8,
+                                                        'radius': 8,
+                                                        'fontSize': 14,
+                                                        'iconSize': 18,
+                                                        'action': () {},
+                                                      },
+                                                    ),
+                                                    // NOTE: copy button
+                                                    DynamicWidgetData(
+                                                      type: 'Button',
+                                                      properties: {
+                                                        'color':
+                                                            Colors.transparent,
+                                                        'hoverBorderWidth': 2,
+                                                        'rippleColor':
+                                                            Colors.black26,
+                                                        'borderColor': AppTheme
+                                                            .onSurface
+                                                            .withOpacity(0.2),
+                                                        'borderWidth': 1,
+                                                        'isButton': true,
+                                                        'svgIcon':
+                                                            'assets/svg/copy.svg',
+                                                        'svgIconColor':
+                                                            AppTheme.onSurface,
+                                                        'hoverColor': AppTheme
+                                                            .success
+                                                            .withAlpha(40),
+                                                        'padding': 8,
+                                                        'radius': 8,
+                                                        'fontSize': 14,
+                                                        'iconSize': 18,
+                                                        'action': () {},
+                                                      },
+                                                    ),
+                                                    // NOTE: delete button
+                                                    DynamicWidgetData(
+                                                      type: 'Button',
+                                                      properties: {
+                                                        'color':
+                                                            Colors.transparent,
+                                                        'hoverBorderWidth': 2,
+                                                        'rippleColor':
+                                                            Colors.black26,
+                                                        'borderColor': AppTheme
+                                                            .onSurface
+                                                            .withOpacity(0.2),
+                                                        'borderWidth': 1,
+                                                        'isButton': true,
+                                                        'svgIcon':
+                                                            'assets/svg/delete.svg',
+                                                        'svgIconColor':
+                                                            AppTheme.error,
+                                                        'hoverColor': AppTheme
+                                                            .error
+                                                            .withAlpha(30),
+                                                        'padding': 8,
+                                                        'radius': 8,
+                                                        'fontSize': 14,
+                                                        'iconSize': 18,
+                                                        'action': () {},
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ],
                                       ),

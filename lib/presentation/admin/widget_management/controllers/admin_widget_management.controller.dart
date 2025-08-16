@@ -75,7 +75,8 @@ class AdminWidgetManagementController extends GetxController {
     return (screenWidth - ((5 + 1) * spacing)) / 5;
   }
 
-  // TODO: create layout component to check phone size cannot use
+  final emailTF = TextEditingController();
+  final emailFN = FocusNode();
 
   buildBody() {
     return DynamicWidgetData(
@@ -113,8 +114,8 @@ class AdminWidgetManagementController extends GetxController {
                   DynamicWidgetData(
                     type: 'Button',
                     properties: {
-                      'borderColor': AppTheme.onSurface,
                       'borderWidth': 1,
+                      'hoverBorderWidth': 2,
                       'title': 'Create Widget',
                       'svgIcon': 'assets/svg/add.svg',
                       'svgIconColor': AppTheme.onPrimary,
@@ -129,24 +130,41 @@ class AdminWidgetManagementController extends GetxController {
                         DynamicWidgetData(
                           type: 'Alert',
                           properties: {
-                            
-                            'title': 'Fill Info',
-                            'content':
-                                DynamicWidgetData(type: 'Column', properties: {
-                              'mainAxisSize': 'min',
-                            }, children: [
-                              DynamicWidgetData(
-                                  type: 'Text',
-                                  properties: {'text': 'Enter your email'}),
-                              DynamicWidgetData(
-                                  type: 'TextField',
-                                  properties: {'controllerKey': 'emailField'}),
-                            ]),
+                            'title': 'Create New Widget',
+                            'content': DynamicWidgetData(
+                              type: 'Container',
+                              properties: {
+                                'width': Get.width * 0.5,
+                              },
+                              child: DynamicWidgetData(
+                                type: 'Column',
+                                properties: {
+                                  'mainAxisSize': 'min',
+                                },
+                                children: [
+                                  DynamicWidgetData(
+                                    type: 'TextField',
+                                    properties: {
+                                      'label': 'Widget Name',
+                                      'labelColor': AppTheme.onBackground,
+                                      'borderColor': AppTheme.onBackground,
+                                      'controller': emailTF,
+                                      'focusNode': emailFN,
+                                      // 'nextFocus': passwordFN,
+                                      'hintText': 'Enter widget name',
+                                      'isRequired': true,
+                                      'errorText': '',
+                                      'showError': false,
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
                             'confirmText': 'Submit',
                             'onConfirm': () {
                               final email = Get.find<TextEditingController>(
-                                      tag: 'emailField')
-                                  .text;
+                                tag: 'emailField',
+                              ).text;
                               print('Email: $email');
                             },
                           },
@@ -264,188 +282,207 @@ class AdminWidgetManagementController extends GetxController {
                               DynamicWidgetData(
                                 type: 'FlexibleWrap',
                                 properties: {},
-                                children: widgets.map((item) {
+                                children: widgets.asMap().entries.map((entry) {
+                                  final index = entry.key;
+                                  final item = entry.value;
+                                  final isLast = index == widgets.length - 1;
+
                                   return DynamicWidgetData(
-                                    type: 'Column',
-                                    properties: {},
-                                    children: [
-                                      DynamicWidgetData(
-                                        type: 'Container',
-                                        properties: {
-                                          'height': 0.5,
-                                          'width': double.infinity,
-                                          'color':
-                                              AppTheme.onSurface.withAlpha(80),
-                                        },
-                                      ),
-                                      DynamicWidgetData(
-                                        type: 'Container',
-                                        properties: {
-                                          'maxWidth': 1280,
-                                          'color': AppTheme.onSecondary,
-                                          'padding': 24,
-                                          'radius': 16,
-                                        },
-                                        child: DynamicWidgetData(
-                                          type: 'Row',
+                                    type: 'Button',
+                                    properties: {
+                                      'hoverColor': AppTheme.isDark
+                                          ? Colors.white24
+                                          : Colors.black.withOpacity(0.03),
+                                      'hoverBorderWidth': 0,
+                                      'radiusBottomLeft': isLast ? 16 : 0,
+                                      'radiusBottomRight': isLast ? 16 : 0,
+                                      'action': () => null
+                                    },
+                                    child: DynamicWidgetData(
+                                      type: 'Column',
+                                      properties: {},
+                                      children: [
+                                        DynamicWidgetData(
+                                          type: 'Container',
                                           properties: {
-                                            'mainAxisAlignment': 'spaceBetween',
+                                            'height': 0.5,
+                                            'width': double.infinity,
+                                            'color': AppTheme.onSurface
+                                                .withAlpha(80),
                                           },
-                                          children: [
-                                            DynamicWidgetData(
-                                              type: 'Row',
-                                              properties: {
-                                                'spacing': 16,
-                                              },
-                                              children: [
-                                                DynamicWidgetData(
-                                                  type: 'Container',
-                                                  properties: {
-                                                    'color': Colors.blueAccent
-                                                        .withOpacity(0.2),
-                                                    'padding': 8,
-                                                    'radius': 8,
-                                                  },
-                                                  child: DynamicWidgetData(
-                                                    type: 'SvgImage',
+                                        ),
+                                        DynamicWidgetData(
+                                          type: 'Container',
+                                          properties: {
+                                            'maxWidth': 1280,
+                                            'padding': 24,
+                                            'radius': 16,
+                                          },
+                                          child: DynamicWidgetData(
+                                            type: 'Row',
+                                            properties: {
+                                              'mainAxisAlignment':
+                                                  'spaceBetween',
+                                            },
+                                            children: [
+                                              DynamicWidgetData(
+                                                type: 'Row',
+                                                properties: {
+                                                  'spacing': 16,
+                                                },
+                                                children: [
+                                                  DynamicWidgetData(
+                                                    type: 'Container',
                                                     properties: {
-                                                      'width': 24,
-                                                      'height': 24,
-                                                      'image':
-                                                          'assets/svg/widget-manage.svg',
-                                                      'color': Colors
-                                                          .blueAccent.shade700,
+                                                      'color': Colors.blueAccent
+                                                          .withOpacity(0.2),
+                                                      'padding': 8,
+                                                      'radius': 8,
                                                     },
+                                                    child: DynamicWidgetData(
+                                                      type: 'SvgImage',
+                                                      properties: {
+                                                        'width': 24,
+                                                        'height': 24,
+                                                        'image':
+                                                            'assets/svg/widget-manage.svg',
+                                                        'color': Colors
+                                                            .blueAccent
+                                                            .shade700,
+                                                      },
+                                                    ),
                                                   ),
-                                                ),
-                                                DynamicWidgetData(
-                                                  type: 'Column',
-                                                  properties: {
-                                                    'mainAxisSize': 'min',
-                                                  },
-                                                  children: [
-                                                    DynamicWidgetData(
-                                                      type: 'Text',
-                                                      properties: {
-                                                        'text': item['title'],
-                                                        'fontSize': 16,
-                                                        'fontWeight': 'bold',
-                                                        'color':
-                                                            AppTheme.onSurface,
-                                                      },
-                                                    ),
-                                                    DynamicWidgetData(
-                                                      type: 'Text',
-                                                      properties: {
-                                                        'text':
-                                                            item['subTitle'],
-                                                        'color':
-                                                            AppTheme.secondary,
-                                                      },
-                                                    ),
-                                                    DynamicWidgetData(
-                                                        type: 'SizedBox',
+                                                  DynamicWidgetData(
+                                                    type: 'Column',
+                                                    properties: {
+                                                      'mainAxisSize': 'min',
+                                                    },
+                                                    children: [
+                                                      DynamicWidgetData(
+                                                        type: 'Text',
                                                         properties: {
-                                                          'height': 6
-                                                        }),
-                                                    DynamicWidgetData(
-                                                      type: 'Row',
-                                                      properties: {
-                                                        'crossAxisAlignment':
-                                                            'center',
-                                                        'spacing': 8,
-                                                      },
-                                                      children: [
-                                                        DynamicWidgetData(
-                                                          type: 'Container',
+                                                          'text': item['title'],
+                                                          'fontSize': 16,
+                                                          'fontWeight': 'bold',
+                                                          'color': AppTheme
+                                                              .onSurface,
+                                                        },
+                                                      ),
+                                                      DynamicWidgetData(
+                                                        type: 'Text',
+                                                        properties: {
+                                                          'text':
+                                                              item['subTitle'],
+                                                          'color': AppTheme
+                                                              .secondary,
+                                                        },
+                                                      ),
+                                                      DynamicWidgetData(
+                                                          type: 'SizedBox',
                                                           properties: {
-                                                            'verticalPadding':
-                                                                4,
-                                                            'horizontalPadding':
-                                                                8,
-                                                            'radius': 6,
-                                                            'color': AppTheme
-                                                                .primary
-                                                                .withOpacity(
-                                                                    0.11),
-                                                          },
-                                                          child:
-                                                              DynamicWidgetData(
+                                                            'height': 6
+                                                          }),
+                                                      DynamicWidgetData(
+                                                        type: 'Row',
+                                                        properties: {
+                                                          'crossAxisAlignment':
+                                                              'center',
+                                                          'spacing': 8,
+                                                        },
+                                                        children: [
+                                                          DynamicWidgetData(
+                                                            type: 'Container',
+                                                            properties: {
+                                                              'verticalPadding':
+                                                                  4,
+                                                              'horizontalPadding':
+                                                                  8,
+                                                              'radius': 6,
+                                                              'color': AppTheme
+                                                                  .primary
+                                                                  .withOpacity(
+                                                                      0.11),
+                                                            },
+                                                            child:
+                                                                DynamicWidgetData(
+                                                              type: 'Text',
+                                                              properties: {
+                                                                'text': item[
+                                                                    'type'],
+                                                                'fontSize': 12,
+                                                                'color': AppTheme
+                                                                    .secondary,
+                                                              },
+                                                            ),
+                                                          ),
+                                                          DynamicWidgetData(
                                                             type: 'Text',
                                                             properties: {
                                                               'text':
-                                                                  item['type'],
+                                                                  '${item['propertiesCount']} properties',
                                                               'fontSize': 12,
                                                               'color': AppTheme
                                                                   .secondary,
                                                             },
                                                           ),
-                                                        ),
-                                                        DynamicWidgetData(
-                                                          type: 'Text',
-                                                          properties: {
-                                                            'text':
-                                                                '${item['propertiesCount']} properties',
-                                                            'fontSize': 12,
-                                                            'color': AppTheme
-                                                                .secondary,
-                                                          },
-                                                        ),
-                                                        DynamicWidgetData(
-                                                          type: 'Text',
-                                                          properties: {
-                                                            'text':
-                                                                '${item['functionCount']} functions',
-                                                            'fontSize': 12,
-                                                            'color': AppTheme
-                                                                .secondary,
-                                                          },
-                                                        ),
-                                                        DynamicWidgetData(
-                                                          type: 'Text',
-                                                          properties: {
-                                                            'text':
-                                                                'Updated ${item['updated_at']}',
-                                                            'fontSize': 12,
-                                                            'color': AppTheme
-                                                                .secondary,
-                                                          },
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                            DynamicWidgetData(
-                                              type: 'RowList',
-                                              properties: {
-                                                'spacing': 12,
-                                              },
-                                              children: editWidgets.map((item) {
-                                                return DynamicWidgetData(
-                                                  type: 'Button',
-                                                  properties: {
-                                                    'isButton': true,
-                                                    'svgIcon': item['icon'],
-                                                    'svgIconColor':
-                                                        AppTheme.onBackground,
-                                                    'hoverSvgIconColor':
-                                                        AppTheme.onPrimary,
-                                                    'padding': 8,
-                                                    'radius': 8,
-                                                    'fontSize': 14,
-                                                    'iconSize': 18,
-                                                    'action': () =>
-                                                        print('Create Widget'),
-                                                  },
-                                                );
-                                              }).toList(),
-                                            ),
-                                          ],
+                                                          DynamicWidgetData(
+                                                            type: 'Text',
+                                                            properties: {
+                                                              'text':
+                                                                  '${item['functionCount']} functions',
+                                                              'fontSize': 12,
+                                                              'color': AppTheme
+                                                                  .secondary,
+                                                            },
+                                                          ),
+                                                          DynamicWidgetData(
+                                                            type: 'Text',
+                                                            properties: {
+                                                              'text':
+                                                                  'Updated ${item['updated_at']}',
+                                                              'fontSize': 12,
+                                                              'color': AppTheme
+                                                                  .secondary,
+                                                            },
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              DynamicWidgetData(
+                                                type: 'RowList',
+                                                properties: {
+                                                  'spacing': 12,
+                                                },
+                                                children:
+                                                    editWidgets.map((item) {
+                                                  return DynamicWidgetData(
+                                                    type: 'Button',
+                                                    properties: {
+                                                      'isButton': true,
+                                                      'svgIcon': item['icon'],
+                                                      'svgIconColor':
+                                                          AppTheme.onBackground,
+                                                      'hoverColor': AppTheme
+                                                          .primary
+                                                          .withOpacity(0.1),
+                                                      'padding': 8,
+                                                      'radius': 8,
+                                                      'fontSize': 14,
+                                                      'iconSize': 18,
+                                                      'action': () => print(
+                                                          'Create Widget'),
+                                                    },
+                                                  );
+                                                }).toList(),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   );
                                 }).toList(),
                               ),

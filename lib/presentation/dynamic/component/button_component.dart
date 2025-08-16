@@ -91,7 +91,9 @@ class _HoverRippleButtonState extends State<HoverRippleButton> {
           decoration: BoxDecoration(
             color: gradient == null
                 ? isHovered
-                    ? (property['hoverColor'] ?? AppTheme.secondary)
+                    ? property['hoverColor'] ??
+                        (property['color'] ?? AppTheme.secondary)
+                            .withOpacity(0.8)
                     : property['color'] ?? Colors.transparent
                 : null,
             gradient: gradient,
@@ -108,8 +110,14 @@ class _HoverRippleButtonState extends State<HoverRippleButton> {
                 : BorderRadius.circular(
                     (property['radius'] as num?)?.toDouble() ?? 12),
             border: Border.all(
-              color: property['borderColor'] ?? Colors.transparent,
-              width: (property['borderWidth'] as num?)?.toDouble() ?? 0,
+              color: isHovered
+                  ? property['hoverBorderColor'] ??
+                      property['color'] ??
+                      Colors.transparent
+                  : property['borderColor'] ?? Colors.transparent,
+              width: isHovered
+                  ? (property['hoverBorderWidth'] as num?)?.toDouble() ?? 1
+                  : (property['borderWidth'] as num?)?.toDouble() ?? 0,
             ),
           ),
           child: widget.data.child != null
