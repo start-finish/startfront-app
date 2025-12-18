@@ -1,22 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../editor/controllers/editor.controller.dart';
 import '../data/data.dart';
+import '../data/factory.dart';
 
-/// Usage:
-/// dropComponent(
-///   data: DynamicWidgetData(
-///     type: 'DropArea',
-///     properties: {
-///       'placeholder': 'Drop widgets here',
-///       'padding': 12.0,
-///       'radius': 12.0,
-///       'color': Colors.white,
-///       'borderColor': Colors.grey,
-///       'borderWidth': 1.0,
-///     },
-///   ),
-///   onAccept: (widgetData) => print('Accepted: ${widgetData.type}'),
-/// )
 Widget dropComponent({
   required DynamicWidgetData data,
   void Function(DynamicWidgetData accepted)? onAccept,
@@ -26,10 +13,9 @@ Widget dropComponent({
 
 class _DropArea extends StatefulWidget {
   const _DropArea({
-    Key? key,
     required this.data,
     this.onAccept,
-  }) : super(key: key);
+  });
 
   final DynamicWidgetData data;
   final void Function(DynamicWidgetData accepted)? onAccept;
@@ -39,8 +25,8 @@ class _DropArea extends StatefulWidget {
 }
 
 class _DropAreaState extends State<_DropArea> {
-  final List<DynamicWidgetData> _dropped = [];
-  bool _highlight = false;
+  final RxBool _highlight = false.obs; // Use RxBool for GetX reactive state
+  final editor = Get.find<EditorController>(); // shared store
 
   @override
   Widget build(BuildContext context) {
@@ -60,59 +46,68 @@ class _DropAreaState extends State<_DropArea> {
       duration: const Duration(milliseconds: 120),
       padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
-        color: _highlight ? bg.withOpacity(0.96) : bg,
+        color: _highlight.value
+            ? bg.withOpacity(0.96)
+            : bg, // Use .value to access RxBool
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color:
-              _highlight ? Theme.of(context).colorScheme.primary : borderColor,
-          width: _highlight ? (borderWidth + 0.5) : borderWidth,
+          color: _highlight.value
+              ? Theme.of(context).colorScheme.primary
+              : borderColor,
+          width: _highlight.value ? (borderWidth + 0.5) : borderWidth,
         ),
       ),
       child: DragTarget<DynamicWidgetData>(
-        onWillAccept: (data) {
-          setState(() => _highlight = true);
-          return true; // accept any DynamicWidgetData
+        onWillAccept: (_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _highlight.value = true; // Update using GetX after the build phase
+          });
+          return true;
         },
-        onLeave: (data) {
-          setState(() => _highlight = false);
+        onLeave: (_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _highlight.value = false; // Update using GetX after the build phase
+          });
         },
         onAccept: (accepted) {
-          setState(() {
-            _dropped.add(accepted);
-            _highlight = false;
-          });
+          // Call the onAccept callback and pass the accepted widget
           widget.onAccept?.call(accepted);
-          print(_dropped);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _highlight.value = false; // Update using GetX after the build phase
+          });
         },
         builder: (context, candidate, rejected) {
-          if (_dropped.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  placeholderText,
-                  style: TextStyle(
-                    color: Colors.black.withOpacity(0.5),
-                    fontStyle: FontStyle.italic,
+          return Obx(() {
+            final items = editor.droppedWidgets;
+            if (items.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    placeholderText,
+                    style: TextStyle(
+                      color: Colors.black.withOpacity(0.5),
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ),
-              ),
-            );
-          }
-
-          // Render dropped dynamic widgets
-          return Container(
-            height: Get.height,
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _dropped.map((e) {
-                // If you use a factory: DynamicWidgetFactory.createWidget(e)
-                // If your model has a helper: e.toWidget()
-                return e.toWidget();
-              }).toList(),
-            ),
-          );
+              );
+            }
+            return Obx(() {
+              return SingleChildScrollView(
+                child: SizedBox(
+                  height: Get.height,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: editor.droppedWidgets
+                        .map((e) => DynamicWidgetFactory.createWidget(e))
+                        .toList(),
+                  ),
+                ),
+              );
+            });
+          });
         },
       ),
     );

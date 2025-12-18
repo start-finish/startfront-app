@@ -153,6 +153,7 @@ class SignupController extends GetxController {
                   'width': double.infinity,
                   'title': 'Create Account',
                   'titleColor': AppTheme.onPrimary,
+                  'textColor': AppTheme.onPrimary,
                   'padding': 8,
                   'radius': 12,
                   'svgIcon': 'assets/svg/sign-up.svg',

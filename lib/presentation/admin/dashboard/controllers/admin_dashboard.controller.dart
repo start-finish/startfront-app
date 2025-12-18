@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
 
+import '../../../../domain/service/dynamic_service.dart';
+import '../../../../domain/service/handle_error.dart';
 import '../../../../infrastructure/theme/app_theme.dart';
 import '../../../dynamic/component/logo_label.dart';
 import '../../../dynamic/data/data.dart';
@@ -16,42 +20,42 @@ class AdminDashboardController extends GetxController {
     {
       'title': 'Platform Screens',
       'subTitle': 'Manage and edit StartFront UI screens',
-      'icon': 'assets/svg/platform.svg',
+      'icon': IconsaxPlusLinear.grid_7,
       'color': Colors.blue,
       'route': '/admin-platforms-screens',
     },
     {
       'title': 'Navigation Menus',
       'subTitle': 'Configure plaform navigation',
-      'icon': 'assets/svg/navigation.svg',
+      'icon': IconsaxPlusLinear.menu,
       'color': Colors.green,
       'route': '/',
     },
     {
       'title': 'Widget Management',
       'subTitle': 'Create and manage custom widgets',
-      'icon': 'assets/svg/widget-manage.svg',
+      'icon': IconsaxPlusLinear.box,
       'color': Colors.deepPurpleAccent,
       'route': '/admin-widget-management',
     },
     {
       'title': 'Widget Presets',
       'subTitle': 'Manage reusable widget combinations',
-      'icon': 'assets/svg/widget-presets.svg',
+      'icon': IconsaxPlusLinear.layer,
       'color': Colors.purpleAccent,
       'route': '/',
     },
     {
       'title': 'Global Theme',
       'subTitle': 'Platfrom-wide styling and branding',
-      'icon': 'assets/svg/theme.svg',
+      'icon': IconsaxPlusLinear.brush_3,
       'color': Colors.pinkAccent,
       'route': '/',
     },
     {
       'title': 'Roles & Permissions',
       'subTitle': 'User access and security settings',
-      'icon': 'assets/svg/role-permission.svg',
+      'icon': IconsaxPlusLinear.shield,
       'color': Colors.red,
       'route': '/',
     },
@@ -60,28 +64,95 @@ class AdminDashboardController extends GetxController {
     {
       'title': 'Client Projects',
       'subTitle': 'Manage client accounts and projects',
-      'icon': 'assets/svg/users-group.svg',
+      'icon': IconsaxPlusLinear.profile_2user,
       'color': Colors.indigoAccent,
       'route': '/',
     },
     {
       'title': 'Platform Analytics',
       'subTitle': 'View usage and performance metrics',
-      'icon': 'assets/svg/analytic.svg',
+      'icon': IconsaxPlusBold.chart_1,
       'color': Colors.orange,
       'route': '/',
     },
     {
       'title': 'System Settings',
       'subTitle': 'Configure platform settings',
-      'icon': 'assets/svg/settings.svg',
+      'icon': IconsaxPlusLinear.setting_2,
       'color': Colors.blueGrey,
       'route': '/',
     },
   ];
 
+  final DynamicService _dynamicService = DynamicService();
+
+  // RxMap widgetPresets = {}.obs;
+  // RxMap navigationItems = {}.obs;
+  // RxMap navigationMenus = {}.obs;
+  RxList widgetPresets = [].obs;
+  RxList navigationItems = [].obs;
+  RxList navigationMenus = [].obs;
+
+  Future<void> _makeMultipleRequests() async {
+    try {
+      // Show loading before starting the requests
+      EasyLoading.show(status: 'Loading...');
+
+      // Call multiple API requests concurrently
+      final call1 = _dynamicService.fetchDynamicData<Map<String, dynamic>>(
+        name: 'Request 1',
+        reqBody: {"msgId": "WIDGET_PRESET_ITEMS_list", "data": {}},
+      );
+
+      final call2 = _dynamicService.fetchDynamicData<Map<String, dynamic>>(
+        name: 'Request 2',
+        reqBody: {"msgId": "NAVIGATION_ITEMS_list", "data": {}},
+      );
+
+      final call3 = _dynamicService.fetchDynamicData<Map<String, dynamic>>(
+        name: 'Request 3',
+        reqBody: {"msgId": "NAVIGATION_MENUS_list", "data": {}},
+      );
+
+      // Wait for all requests to complete
+      final results = await Future.wait([call1, call2, call3]);
+
+      // Handle the responses
+      bool errorOccurred = false; // Track if any error occurred
+
+      for (var result in results) {
+        result.fold((error) => errorOccurred = true, (data) {
+          // Identify which request this is
+          if (result == results[0]) {
+            widgetPresets.value = data["data"] ?? [];
+          } else if (result == results[1]) {
+            navigationItems.value = data["data"] ?? [];
+          } else if (result == results[2]) {
+            navigationMenus.value = data["data"] ?? [];
+          }
+        });
+      }
+
+      // If any error occurred, show the error alert (only once)
+      if (errorOccurred) {
+        HandleError.errors(
+          'ERROR_I_C',
+          'Request Failed',
+          'Some requests failed.',
+        );
+      }
+
+      EasyLoading.dismiss();
+    } catch (e) {
+      // Handle unexpected errors
+      EasyLoading.dismiss();
+      HandleError.errors('ERROR_I_C', 'Unknown Error', e.toString());
+    }
+  }
+
   @override
-  void onInit() {
+  void onInit() async {
+    await _makeMultipleRequests();
     super.onInit();
   }
 
@@ -108,15 +179,10 @@ class AdminDashboardController extends GetxController {
   buildBody() {
     return DynamicWidgetData(
       type: 'Container',
-      properties: {
-        'gradient': 'primary',
-      },
+      properties: {'gradient': 'primary'},
       child: DynamicWidgetData(
         type: 'Column',
-        properties: {
-          'mainAxisSize': 'max',
-          'crossAxisAlignment': 'center',
-        },
+        properties: {'mainAxisSize': 'max', 'crossAxisAlignment': 'center'},
         children: [
           DynamicWidgetData(
             type: 'Container',
@@ -150,9 +216,10 @@ class AdminDashboardController extends GetxController {
                       'borderWidth': 1,
                       'hoverBorderWidth': 2,
                       'title': 'Logout',
-                      'svgIcon': 'assets/svg/log-out.svg',
-                      'svgIconColor': AppTheme.onSurface,
-                      'hoverSvgIconColor': AppTheme.primary,
+                      'icon': IconsaxPlusBroken.logout,
+                      'hoverIcon': IconsaxPlusLinear.logout,
+                      'iconColor': AppTheme.onSurface,
+                      'hoverIconColor': AppTheme.primary,
                       'textColor': AppTheme.onSurface,
                       'hoverTextColor': AppTheme.primary,
                       'horizontalPadding': 16,
@@ -184,10 +251,7 @@ class AdminDashboardController extends GetxController {
                   type: 'Center',
                   child: DynamicWidgetData(
                     type: 'Container',
-                    properties: {
-                      'width': 1280,
-                      'padding': 16,
-                    },
+                    properties: {'width': 1280, 'padding': 16},
                     child: DynamicWidgetData(
                       type: 'Column',
                       properties: {
@@ -198,10 +262,7 @@ class AdminDashboardController extends GetxController {
                       children: [
                         DynamicWidgetData(
                           type: 'FlexibleWrap',
-                          properties: {
-                            'spacing': 12,
-                            'runSpacing': 12,
-                          },
+                          properties: {'spacing': 12, 'runSpacing': 12},
                           children: texts.map((text) {
                             return DynamicWidgetData(
                               type: 'Container',
@@ -212,8 +273,9 @@ class AdminDashboardController extends GetxController {
                                 'padding': 24,
                                 'radius': 16,
                                 'borderWidth': 1,
-                                'borderColor':
-                                    AppTheme.onSurface.withOpacity(0.15),
+                                'borderColor': AppTheme.onSurface.withOpacity(
+                                  0.15,
+                                ),
                               },
                               child: DynamicWidgetData(
                                 type: 'Column',
@@ -282,10 +344,7 @@ class AdminDashboardController extends GetxController {
                         ),
                         DynamicWidgetData(
                           type: 'FlexibleWrap',
-                          properties: {
-                            'spacing': 12,
-                            'runSpacing': 12,
-                          },
+                          properties: {'spacing': 12, 'runSpacing': 12},
                           children: platformManages.map((item) {
                             return DynamicWidgetData(
                               type: 'Container',
@@ -302,8 +361,9 @@ class AdminDashboardController extends GetxController {
                                   'width': double.infinity,
                                   'borderWidth': 1,
                                   'hoverBorderWidth': 2,
-                                  'borderColor':
-                                      AppTheme.onSurface.withOpacity(0.15),
+                                  'borderColor': AppTheme.onSurface.withOpacity(
+                                    0.15,
+                                  ),
                                   'hoverBorderColor': AppTheme.primary,
                                   'action': () => item['route'] != '/'
                                       ? Get.toNamed(item['route'])
@@ -311,10 +371,7 @@ class AdminDashboardController extends GetxController {
                                 },
                                 child: DynamicWidgetData(
                                   type: 'Container',
-                                  properties: {
-                                    'padding': 24,
-                                    'radius': 16,
-                                  },
+                                  properties: {'padding': 24, 'radius': 16},
                                   child: DynamicWidgetData(
                                     type: 'Row',
                                     properties: {
@@ -330,11 +387,10 @@ class AdminDashboardController extends GetxController {
                                           'radius': 12,
                                         },
                                         child: DynamicWidgetData(
-                                          type: 'SvgImage',
+                                          type: 'Icon',
                                           properties: {
-                                            'width': 24,
-                                            'height': 24,
-                                            'image': item['icon'],
+                                            'size': 24,
+                                            'icon': item['icon'],
                                             'color': AppTheme.onPrimary,
                                           },
                                         ),
@@ -396,10 +452,7 @@ class AdminDashboardController extends GetxController {
                         ),
                         DynamicWidgetData(
                           type: 'FlexibleWrap',
-                          properties: {
-                            'spacing': 12,
-                            'runSpacing': 12,
-                          },
+                          properties: {'spacing': 12, 'runSpacing': 12},
                           children: clientManages.map((item) {
                             return DynamicWidgetData(
                               type: 'Container',
@@ -416,8 +469,9 @@ class AdminDashboardController extends GetxController {
                                   'width': double.infinity,
                                   'borderWidth': 1,
                                   'hoverBorderWidth': 2,
-                                  'borderColor':
-                                      AppTheme.onSurface.withOpacity(0.15),
+                                  'borderColor': AppTheme.onSurface.withOpacity(
+                                    0.15,
+                                  ),
                                   'hoverBorderColor': AppTheme.primary,
                                   'action': () => item['route'] != '/'
                                       ? Get.toNamed(item['route'])
@@ -425,10 +479,7 @@ class AdminDashboardController extends GetxController {
                                 },
                                 child: DynamicWidgetData(
                                   type: 'Container',
-                                  properties: {
-                                    'padding': 24,
-                                    'radius': 16,
-                                  },
+                                  properties: {'padding': 24, 'radius': 16},
                                   child: DynamicWidgetData(
                                     type: 'Row',
                                     properties: {
@@ -444,11 +495,10 @@ class AdminDashboardController extends GetxController {
                                           'radius': 12,
                                         },
                                         child: DynamicWidgetData(
-                                          type: 'SvgImage',
+                                          type: 'Icon',
                                           properties: {
-                                            'width': 24,
-                                            'height': 24,
-                                            'image': item['icon'],
+                                            'size': 24,
+                                            'icon': item['icon'],
                                             'color': AppTheme.onPrimary,
                                           },
                                         ),

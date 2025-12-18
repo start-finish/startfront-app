@@ -13,7 +13,17 @@ class AdminWidgetManagementScreen
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: smallScreen(child: controller.buildBody()),
+      body: Obx(
+        () => smallScreen(
+            child: controller.widgetList.isEmpty ||
+                    controller.widgetList['data'] == null
+                ? buildLoading()
+                : controller.buildBody()),
+      ),
     );
+  }
+
+  Widget buildLoading() {
+    return Center(child: CircularProgressIndicator());
   }
 }

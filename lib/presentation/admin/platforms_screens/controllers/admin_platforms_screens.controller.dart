@@ -187,9 +187,9 @@ class AdminPlatformsScreensController extends GetxController {
                                       'controller': searchTF,
                                       'focusNode': searchFN,
                                       'hintText': 'Search screens...',
-                                      'isRequired': false,
+                                      'isRequired': false.obs,
                                       'errorText': '',
-                                      'showError': false,
+                                      'showError': false.obs,
                                       'borderColor':
                                           AppTheme.onSurface.withOpacity(0.3),
                                     },

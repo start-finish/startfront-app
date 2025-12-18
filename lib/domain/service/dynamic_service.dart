@@ -16,7 +16,7 @@ class DynamicService extends BaseService {
     Object? reqBody,
     bool isDynamicRSA = true,
   }) async {
-    String endpoint = '$_baseUrl/api/$subEndpoint';
+    String endpoint = '$_baseUrl/${subEndpoint ?? 'startProcess'}';
 
     await loadAuthHeader();
 
@@ -27,6 +27,7 @@ class DynamicService extends BaseService {
       isDynamicRSA,
       reqBody: reqBody,
       name: name,
+      isEncrypt: false,
     );
 
     return responseEither.fold(

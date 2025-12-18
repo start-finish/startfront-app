@@ -5,10 +5,11 @@ import '../data/data.dart';
 
 /// 🔁 Reusable text field with internal validation
 Widget textFieldComponent({required DynamicWidgetData data}) {
+  // Ensure the controller and focus node are initialized
   data.properties['controller'] ??= TextEditingController();
   data.properties['focusNode'] ??= FocusNode();
   data.properties['errorText'] ??= '';
-  data.properties['showError'] ??= false;
+  data.properties['showError'] ??= false.obs; // Ensure it's reactive with GetX
 
   return Padding(
     padding: EdgeInsets.symmetric(
@@ -18,18 +19,21 @@ Widget textFieldComponent({required DynamicWidgetData data}) {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (data.properties['label'] != null)
-          Text(
-            data.properties['label'],
-            style: TextStyle(
-              color: data.properties['showError']
-                  ? AppTheme.error
-                  : data.properties['labelColor'] ?? AppTheme.primary,
-              fontSize: 13,
-              fontWeight: data.properties['showError']
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-            ),
-          ),
+          Obx(() {
+            // Wrap in Obx to trigger UI update
+            return Text(
+              data.properties['label'],
+              style: TextStyle(
+                color: data.properties['showError'].value == true
+                    ? AppTheme.error
+                    : data.properties['labelColor'] ?? AppTheme.primary,
+                fontSize: 13,
+                fontWeight: data.properties['showError'].value == true
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
+            );
+          }),
         if (data.properties['label'] != null) const SizedBox(height: 4),
         TextField(
           controller: data.properties['controller'],
@@ -41,7 +45,7 @@ Widget textFieldComponent({required DynamicWidgetData data}) {
             hintText: data.properties['hintText'] ?? 'Enter text',
             hintStyle:
                 const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            errorText: (data.properties['showError'] == true &&
+            errorText: (data.properties['showError'].value == true &&
                     (data.properties['errorText'] as String?)?.isNotEmpty ==
                         true)
                 ? data.properties['errorText']
@@ -74,22 +78,12 @@ Widget textFieldComponent({required DynamicWidgetData data}) {
                 (data.properties['borderRadius'] as num?)?.toDouble() ?? 12,
               ),
             ),
-            // prefixIcon: data.properties['svgIcon'] != null
-            //     ? SvgPicture.asset(
-            //         data.properties['svgIcon'],
-            //         color: data.properties['color'] ?? AppTheme.onBackground,
-            //       )
-            //     : null,
             prefixIcon: data.properties['prefixIcon'] != null
                 ? Icon(
                     data.properties['prefixIcon'],
                     color: data.properties['color'] ?? AppTheme.onBackground,
                   )
                 : null,
-            // prefixIconConstraints: BoxConstraints(
-            //   maxWidth: data.properties['width'] ?? 18,
-            //   maxHeight: data.properties['height'] ?? 18,
-            // ),
             filled: true,
             fillColor: AppTheme.onPrimary,
           ),
@@ -98,15 +92,20 @@ Widget textFieldComponent({required DynamicWidgetData data}) {
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           onChanged: (value) {
             data.properties['value'] = value;
+            // Trigger validation when value changes
+            _internalValidate(data);
+
+            // Hide error if field is valid and required
             if (data.properties['isRequired'] == true &&
                 value.trim().isNotEmpty) {
               data.properties['errorText'] = '';
-              data.properties['showError'] = false;
+              data.properties['showError'].value =
+                  false; // Update the reactive state
             }
           },
           onSubmitted: (value) {
             data.properties['value'] = value;
-            _internalValidate(data); // run validation internally
+            _internalValidate(data); // Run validation internally
 
             if (data.properties['onSubmitted'] != null) {
               data.properties['onSubmitted']!(value);
@@ -133,11 +132,12 @@ bool _internalValidate(DynamicWidgetData data) {
 
   if (isRequired && isEmpty) {
     data.properties['errorText'] = 'This field is required';
-    data.properties['showError'] = true;
+    data.properties['showError'].value = true; // Ensure the error is reactive
     return false;
   } else {
     data.properties['errorText'] = '';
-    data.properties['showError'] = false;
+    data.properties['showError'].value =
+        false; // Reset the error message reactively
     return true;
   }
 }

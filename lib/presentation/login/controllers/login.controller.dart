@@ -37,7 +37,7 @@ class LoginController extends GetxController {
         'hintText': 'Enter email',
         'isRequired': true,
         'errorText': '',
-        'showError': false,
+        'showError': false.obs,
       },
     );
 
@@ -50,7 +50,7 @@ class LoginController extends GetxController {
         'hintText': 'Enter password',
         'isRequired': true,
         'errorText': '',
-        'showError': false,
+        'showError': false.obs,
       },
     );
   }
@@ -148,6 +148,7 @@ class LoginController extends GetxController {
                   'width': double.infinity,
                   'title': 'Sign In',
                   'titleColor': AppTheme.onPrimary,
+                  'textColor': AppTheme.onPrimary,
                   'svgIcon': 'assets/svg/log-in.svg',
                   'svgColor': AppTheme.onPrimary,
                   'padding': 8,

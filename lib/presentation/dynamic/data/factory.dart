@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+import '../../editor/controllers/editor.controller.dart';
 import '../component/appBar_component.dart';
 import '../component/button_component.dart';
 import '../component/center_component.dart';
+import '../component/checkbox_component.dart';
 import '../component/column_component.dart';
 import '../component/column_list_component.dart';
 import '../component/container_component.dart';
@@ -12,6 +15,7 @@ import '../component/dropdown_component.dart';
 import '../component/expand_component.dart';
 import '../component/flexible_component.dart';
 import '../component/icon_component.dart';
+import '../component/icon_selection_button.dart';
 import '../component/image_component.dart';
 import '../component/list_view_component.dart';
 import '../component/obx_component.dart';
@@ -25,6 +29,7 @@ import '../component/sizedbox_component.dart';
 import '../component/snackbar_component.dart';
 import '../component/stack_component.dart';
 import '../component/svg_image_component.dart';
+import '../component/tabbar_component.dart';
 import '../component/text_component.dart';
 import '../component/textfield_component.dart';
 import '../component/flexible_wrap_component.dart';
@@ -65,6 +70,21 @@ class DynamicWidgetFactory {
         }
       case 'Icon':
         return iconComponent(data: widgetData);
+      case 'IconSelectionButton':
+        final targetData = widgetData.properties['targetData'];
+        final propertyKey = widgetData.properties['propertyKey'];
+        final label = widgetData.properties['label'];
+
+        if (targetData is DynamicWidgetData &&
+            propertyKey is String &&
+            label is String) {
+          return IconSelectionButton(
+            targetData: targetData,
+            propertyKey: propertyKey,
+            label: label,
+          );
+        }
+        return const SizedBox.shrink();
       case 'Image':
         return imageComponent(data: widgetData);
       case 'SvgImage':
@@ -84,7 +104,14 @@ class DynamicWidgetFactory {
       case 'Drag':
         return dragComponent(data: widgetData);
       case 'Drop':
-        return dropComponent(data: widgetData);
+        return dropComponent(
+          data: widgetData,
+          onAccept: Get.find<EditorController>().addWidget, // <- delegate
+        );
+      case 'TabBar':
+        return tabBarComponent(data: widgetData);
+      case 'Checkbox':
+        return checkboxComponent(data: widgetData);
 
       // children widget
       case 'Column':

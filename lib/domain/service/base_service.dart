@@ -39,6 +39,10 @@ class BaseService {
           'Authorization': 'Bearer $token',
         };
       } else {
+        _dio.options.headers = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        };
         log("TOKEN IS EMPTY");
       }
     } catch (error) {

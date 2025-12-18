@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../infrastructure/theme/app_theme.dart';
-import '../../dynamic/component/drop_component.dart';
 import '../../dynamic/data/data.dart';
 
 class EditorController extends GetxController {

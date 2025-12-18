@@ -32,7 +32,7 @@ appBarComponent({required DynamicWidgetData data}) {
     final isSmallScreen = constraints.maxWidth < 600;
 
     return Container(
-      height: property['height'],
+      height: (property['height'] as num?)?.toDouble() ?? 0,
       decoration: BoxDecoration(
         color:
             gradient == null ? (property['color'] ?? Colors.transparent) : null,
