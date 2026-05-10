@@ -1,21 +1,10 @@
+include: package:flutter_lints/flutter.yaml
+
 analyzer:
   errors:
-    avoid_print: ignore
-    constant_identifier_names: ignore
-    dead_code: ignore
-    depend_on_referenced_packages: ignore
-    deprecated_member_use: ignore
-    file_names: ignore
-    invalid_use_of_protected_member: ignore
-    library_private_types_in_public_api: ignore
-    prefer_if_null_operators: ignore
-    unnecessary_null_comparison: ignore
-    unnecessary_overrides: ignore
-    unnecessary_this: ignore
-    unrelated_type_equality_checks: ignore
-    unused_element: ignore
-    unused_local_variable: ignore
-include: package:flutter_lints/flutter.yaml
-linter:
-  rules:
-    
+    unused_import: warning
+    unused_local_variable: warning
+
+formatter:
+  page_width: 120
+  trailing_commas: preserve

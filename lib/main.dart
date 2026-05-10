@@ -1,28 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'screens/dynamic_screen.dart';
+
+import 'src/config/flavors.dart';
+import 'src/config/init.dart';
+import 'src/app.dart';
 
 void main() {
-  runApp(ProviderScope(child: MyApp()));
-}
+  WidgetsFlutterBinding.ensureInitialized();
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const flavorStr = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
+  final flavor = Flavor.values.firstWhere(
+    (f) => f.name == flavorStr,
+    orElse: () => Flavor.dev,
+  );
+  initializeFlavor(flavor);
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Dynamic UI with API',
-      initialRoute: '/',
-      onGenerateRoute: (settings) {
-        // Any named route, including "/", is passed directly to the DynamicScreen
-        return MaterialPageRoute(
-          builder: (context) => DynamicScreen(
-            routeName: settings.name ?? '/',
-          ),
-        );
-      },
-    );
-  }
+  runApp(const ProviderScope(child: StartFrontApp()));
 }

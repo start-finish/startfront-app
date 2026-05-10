@@ -1,16 +1,28 @@
-# startfront_app
+## Running with Flavors
 
-A new Flutter project.
+### Jaspr (Web)
 
-## Getting Started
+Run the project with a specific flavor using the `-d` flag:
 
-This project is a starting point for a Flutter application.
+```bash
+# Development
+jaspr serve -d FLAVOR=dev
 
-A few resources to get you started if this is your first Flutter project:
+# UAT
+jaspr serve -d FLAVOR=uat
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+# Production
+jaspr serve -d FLAVOR=prod
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Flutter (Mobile/Desktop)
+
+The project is also configured for Flutter flavors:
+
+```bash
+# Android
+flutter run --flavor dev -t lib/main_dev.dart
+
+# iOS
+flutter run --flavor dev -t lib/main_dev.dart
+```

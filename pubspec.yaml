@@ -1,63 +1,55 @@
 name: startfront_app
-description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-
-version: 1.0.0+1
+description: StartFront - Professional Flutter Web SPA Dashboard
+version: 0.0.1
 
 environment:
-  sdk: '>=3.6.0 <4.0.0'
+  sdk: ^3.11.0
 
 dependencies:
   flutter:
     sdk: flutter
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
   flutter_riverpod: ^2.6.1
-  json_annotation: any
-  http: ^1.6.0
+  go_router: ^14.8.1
+  google_fonts: ^6.2.1
+  cached_network_image: ^3.4.1
+  flutter_svg: ^2.0.10+1
+  fl_chart: ^0.70.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  flutter_flavorizr: ^2.2.1
   flutter_lints: ^5.0.0
-  build_runner: any
-  json_serializable: any
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/logo/
-    - assets/svg/
+    - assets/icons/
 
-auto_launcher:
-  app_name:
-    enable: true
-    build: "StartFront"
-  version:
-    enable: true
-    build: "0.1.0+2"
-  bundle_id:
-    platforms:
-      android:
-        enable: true
-        build: "com.startfront.android"
-      ios:
-        enable: true
-        build: "com.startfront.ios"
-  icon:
-    enable: true
-    image_path: "assets/logo/StartFinish_logo.png"
-    platforms:
-      android:
-        enable: true
-      ios:
-        enable: true
+flavorizr:
+  app:
+    name: "StartFront"
 
-### run this ###
-# dart run auto_launcher #
+  flavors:
+    dev:
+      app:
+        name: "StartFront Dev"
+      android:
+        applicationId: "com.startfront.dev"
+      ios:
+        bundleId: "com.startfront.dev"
+    uat:
+      app:
+        name: "StartFront UAT"
+      android:
+        applicationId: "com.startfront.uat"
+      ios:
+        bundleId: "com.startfront.uat"
+    prod:
+      app:
+        name: "StartFront"
+      android:
+        applicationId: "com.startfront"
+      ios:
+        bundleId: "com.startfront"
