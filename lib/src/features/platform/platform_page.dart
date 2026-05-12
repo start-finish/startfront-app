@@ -14,10 +14,12 @@ class PlatformPage extends ConsumerStatefulWidget {
 
 class _PlatformPageState extends ConsumerState<PlatformPage> {
   String _selectedStatus = 'All Status';
+  late List<ScreenData> _screensData;
 
   @override
   void initState() {
     super.initState();
+    _screensData = List.from(_screens);
     Future.microtask(() {
       ref.read(pageTitleProvider.notifier).state = 'PLATFORM SCREENS';
       ref.read(pageSubtitleProvider.notifier).state = '';
@@ -47,11 +49,20 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
                   crossAxisCount: crossAxisCount,
                   crossAxisSpacing: 24,
                   mainAxisSpacing: 24,
-                  childAspectRatio: 1.25,
+                  childAspectRatio: 1.35,
                 ),
-                itemCount: _screens.length,
+                itemCount: _screensData.length,
                 itemBuilder: (context, index) {
-                  return _ScreenCard(screen: _screens[index]);
+                  return _ScreenCard(
+                    screen: _screensData[index],
+                    onStatusToggle: () {
+                      setState(() {
+                        final screen = _screensData[index];
+                        final newStatus = screen.status == 'Published' ? 'Draft' : 'Published';
+                        _screensData[index] = screen.copyWith(status: newStatus);
+                      });
+                    },
+                  );
                 },
               );
             },
@@ -119,69 +130,81 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
   }
 
   Widget _buildTopActions() {
-    final isSmall = MediaQuery.of(context).size.width < 1200;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
 
-    return Wrap(
-      spacing: 16,
-      runSpacing: 16,
-      alignment: WrapAlignment.start,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        // New Screen Button
-        _buildHeaderButton(
-          label: 'New Screen',
-          icon: Icons.add,
-          onTap: () {},
-          isPrimary: true,
-        ),
-
-        // Count (Only show if not too small)
-        if (!isSmall)
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: Text(
-              '${_screens.length} screens found',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+    return SizedBox(
+      width: double.infinity,
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 16,
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          // Left side: New Screen Button
+          _buildHeaderButton(
+            label: 'New Screen',
+            icon: Icons.add,
+            onTap: () {},
+            isPrimary: true,
           ),
 
-        // All Status Dropdown
-        _buildStatusFilter(),
-
-        // Search Bar
-        Container(
-          constraints: const BoxConstraints(maxWidth: 320),
-          width: isSmall ? double.infinity : 280,
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          child: Row(
+          // Right side: Count, Filter, and Search
+          Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Icon(Icons.search, color: Colors.white.withValues(alpha: 0.4), size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
-                  decoration: InputDecoration(
-                    hintText: 'Search Screen...',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-                    border: InputBorder.none,
-                    isDense: true,
+              // Count (Only show if not mobile)
+              if (!isMobile)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    '${_screensData.length} screens found',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
+                ),
+
+              // All Status Dropdown
+              _buildStatusFilter(),
+
+              // Search Bar
+              Container(
+                constraints: const BoxConstraints(maxWidth: 320),
+                width: isMobile ? screenWidth - 48 : 280,
+                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.search, color: Colors.white.withValues(alpha: 0.4), size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: 'Search Screen...',
+                          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -260,7 +283,12 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
 
 class _ScreenCard extends StatefulWidget {
   final ScreenData screen;
-  const _ScreenCard({required this.screen});
+  final VoidCallback onStatusToggle;
+
+  const _ScreenCard({
+    required this.screen,
+    required this.onStatusToggle,
+  });
 
   @override
   State<_ScreenCard> createState() => _ScreenCardState();
@@ -268,6 +296,7 @@ class _ScreenCard extends StatefulWidget {
 
 class _ScreenCardState extends State<_ScreenCard> {
   bool _isHovered = false;
+  bool _isStatusHovered = false;
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +311,7 @@ class _ScreenCardState extends State<_ScreenCard> {
           children: [
             // Preview Area
             Expanded(
-              flex: 5,
+              flex: 3,
               child: Stack(
                 children: [
                   Container(
@@ -299,15 +328,15 @@ class _ScreenCardState extends State<_ScreenCard> {
                           children: [
                             SvgPicture.asset(
                               widget.screen.icon1,
-                              width: 24,
-                              height: 24,
+                              width: 48,
+                              height: 48,
                               colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.5), BlendMode.srcIn),
                             ),
                             const SizedBox(width: 12),
                             SvgPicture.asset(
                               widget.screen.icon2,
-                              width: 24,
-                              height: 24,
+                              width: 48,
+                              height: 48,
                               colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.5), BlendMode.srcIn),
                             ),
                           ],
@@ -350,7 +379,7 @@ class _ScreenCardState extends State<_ScreenCard> {
 
             // Content Area
             Expanded(
-              flex: 4,
+              flex: 3,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -378,22 +407,54 @@ class _ScreenCardState extends State<_ScreenCard> {
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: widget.screen.status == 'Published'
-                                ? const Color(0xFF10B981).withValues(alpha: 0.2)
-                                : const Color(0xFFF59E0B).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            widget.screen.status,
-                            style: TextStyle(
-                              color: widget.screen.status == 'Published'
-                                  ? const Color(0xFF34D399)
-                                  : const Color(0xFFFBBF24),
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                        MouseRegion(
+                          onEnter: (_) => setState(() => _isStatusHovered = true),
+                          onExit: (_) => setState(() => _isStatusHovered = false),
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: widget.onStatusToggle,
+                            child: AnimatedScale(
+                              scale: _isStatusHovered ? 1.05 : 1.0,
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOutBack,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: widget.screen.status == 'Published'
+                                      ? const Color(0xFF10B981).withValues(alpha: _isStatusHovered ? 0.3 : 0.2)
+                                      : const Color(0xFFF59E0B).withValues(alpha: _isStatusHovered ? 0.3 : 0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: widget.screen.status == 'Published'
+                                        ? const Color(0xFF34D399).withValues(alpha: _isStatusHovered ? 0.5 : 0)
+                                        : const Color(0xFFFBBF24).withValues(alpha: _isStatusHovered ? 0.5 : 0),
+                                  ),
+                                  boxShadow: _isStatusHovered
+                                      ? [
+                                          BoxShadow(
+                                            color:
+                                                (widget.screen.status == 'Published'
+                                                        ? const Color(0xFF10B981)
+                                                        : const Color(0xFFF59E0B))
+                                                    .withValues(alpha: 0.2),
+                                            blurRadius: 8,
+                                            spreadRadius: 0,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Text(
+                                  widget.screen.status,
+                                  style: TextStyle(
+                                    color: widget.screen.status == 'Published'
+                                        ? const Color(0xFF34D399)
+                                        : const Color(0xFFFBBF24),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -564,6 +625,26 @@ class ScreenData {
     required this.icon1,
     required this.icon2,
   });
+
+  ScreenData copyWith({
+    String? title,
+    String? path,
+    String? category,
+    String? status,
+    String? modifiedAt,
+    String? icon1,
+    String? icon2,
+  }) {
+    return ScreenData(
+      title: title ?? this.title,
+      path: path ?? this.path,
+      category: category ?? this.category,
+      status: status ?? this.status,
+      modifiedAt: modifiedAt ?? this.modifiedAt,
+      icon1: icon1 ?? this.icon1,
+      icon2: icon2 ?? this.icon2,
+    );
+  }
 }
 
 const _screens = [

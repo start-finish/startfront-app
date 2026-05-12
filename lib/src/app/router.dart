@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../core/components/main_layout.dart';
 import '../features/dashboard/dashboard_page.dart';
 import '../features/platform/platform_page.dart';
+import '../features/navigation/navigation_page.dart';
+import '../features/widgets/widget_management_page.dart';
+import '../features/widgets/widget_presets_page.dart';
 
 // Deferred imports for code splitting
 import '../features/users/users_page.dart' deferred as users;
@@ -29,6 +32,24 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/platform',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: PlatformPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/navigation',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: NavigationPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/widget-management',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: WidgetManagementPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/widget-preset',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: WidgetPresetsPage(),
             ),
           ),
           GoRoute(

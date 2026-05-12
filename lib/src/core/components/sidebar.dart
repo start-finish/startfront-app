@@ -13,15 +13,12 @@ class Sidebar extends StatelessWidget {
   static const _navItems = [
     _NavItem(icon: 'assets/icons/dashboard.svg', label: 'Dashboard', path: '/'),
     _NavItem(icon: 'assets/icons/platform screen.svg', label: 'Platform', path: '/platform'),
-    _NavItem(icon: 'assets/icons/users.svg', label: 'Users', path: '/users'),
-    _NavItem(icon: 'assets/icons/active chart.svg', label: 'Analytics', path: '/analytics'),
-    _NavItem(icon: 'assets/icons/media.svg', label: 'Assets', path: '/assets'),
-    _NavItem(icon: 'assets/icons/tree.svg', label: 'Layers', path: '/layers'),
-    _NavItem(
-      icon: 'assets/icons/action.svg',
-      label: 'Log',
-      path: '/settings',
-    ), // Using settings as placeholder path for now
+    _NavItem(icon: 'assets/icons/navigation.svg', label: 'Navigation', path: '/navigation'),
+    _NavItem(icon: 'assets/icons/widget management.svg', label: 'Widget Management', path: '/widget-management'),
+    _NavItem(icon: 'assets/icons/widget preset.svg', label: 'Widget Preset', path: '/widget-preset'),
+    // _NavItem(icon: 'assets/icons/media.svg', label: 'Assets', path: '/assets'),
+    // _NavItem(icon: 'assets/icons/tree.svg', label: 'Layers', path: '/layers'),
+    // _NavItem(icon: 'assets/icons/action.svg', label: 'Log', path: '/settings'),
     _NavItem(icon: 'assets/icons/settings.svg', label: 'Settings', path: '/settings'),
   ];
 
