@@ -8,6 +8,7 @@ import '../features/platform/platform_page.dart';
 import '../features/navigation/navigation_page.dart';
 import '../features/widgets/widget_management_page.dart';
 import '../features/widgets/widget_presets_page.dart';
+import '../features/theme/global_theme_page.dart';
 
 // Deferred imports for code splitting
 import '../features/users/users_page.dart' deferred as users;
@@ -50,6 +51,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/widget-preset',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: WidgetPresetsPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/global-themes',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: GlobalThemePage(),
             ),
           ),
           GoRoute(

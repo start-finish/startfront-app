@@ -16,7 +16,7 @@ class Sidebar extends StatelessWidget {
     _NavItem(icon: 'assets/icons/navigation.svg', label: 'Navigation', path: '/navigation'),
     _NavItem(icon: 'assets/icons/widget management.svg', label: 'Widget Management', path: '/widget-management'),
     _NavItem(icon: 'assets/icons/widget preset.svg', label: 'Widget Preset', path: '/widget-preset'),
-    // _NavItem(icon: 'assets/icons/media.svg', label: 'Assets', path: '/assets'),
+    _NavItem(icon: 'assets/icons/theme.svg', label: 'Global Themes', path: '/global-themes'),
     // _NavItem(icon: 'assets/icons/tree.svg', label: 'Layers', path: '/layers'),
     // _NavItem(icon: 'assets/icons/action.svg', label: 'Log', path: '/settings'),
     _NavItem(icon: 'assets/icons/settings.svg', label: 'Settings', path: '/settings'),
