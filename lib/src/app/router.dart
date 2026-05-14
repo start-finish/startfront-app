@@ -11,7 +11,7 @@ import '../features/widgets/widget_presets_page.dart';
 import '../features/theme/global_theme_page.dart';
 
 // Deferred imports for code splitting
-import '../features/users/users_page.dart' deferred as users;
+import '../features/users/users.dart' deferred as users;
 import '../features/analytics/analytics_page.dart' deferred as analytics;
 import '../features/settings/settings_page.dart' deferred as settings;
 
@@ -60,7 +60,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: '/users',
+            path: '/role-permission',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: _DeferredPage(
+                loader: users.loadLibrary,
+                builder: () => users.RolePermissionPage(),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/user-management',
             pageBuilder: (context, state) => NoTransitionPage(
               child: _DeferredPage(
                 loader: users.loadLibrary,

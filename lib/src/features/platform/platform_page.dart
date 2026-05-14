@@ -4,6 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/components/glass_card.dart';
 import '../../core/constants/theme.dart';
 import '../../core/providers/layout_provider.dart';
+import '../../core/components/confirm_dialog.dart';
+import '../../core/components/app_notification.dart';
+import 'components/new_screen_dialog.dart';
 
 class PlatformPage extends ConsumerStatefulWidget {
   const PlatformPage({super.key});
@@ -14,7 +17,9 @@ class PlatformPage extends ConsumerStatefulWidget {
 
 class _PlatformPageState extends ConsumerState<PlatformPage> {
   String _selectedStatus = 'All Status';
+  String _searchQuery = '';
   late List<ScreenData> _screensData;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -28,20 +33,153 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _showNewScreenDialog() async {
+    final result = await showGeneralDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'New Screen',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, anim1, anim2) => const NewScreenDialog(),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(
+            scale: CurvedAnimation(
+              parent: anim1,
+              curve: Curves.easeOutBack,
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+
+    if (result != null && mounted) {
+      final confirmed = await showGeneralDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Confirm',
+        barrierColor: Colors.black.withValues(alpha: 0.6),
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, anim1, anim2) => const ConfirmDialog(
+          title: 'Confirm Create',
+          message: 'Are you sure you want to create this new platform screen?',
+        ),
+        transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(scale: anim1, child: child),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        setState(() {
+          _screensData.add(
+            ScreenData(
+              title: result['title']!,
+              path: result['path']!,
+              category: result['category']!.isEmpty ? 'Uncategorized' : result['category']!,
+              status: 'Draft',
+              modifiedAt: 'Just now',
+              icon1: 'assets/icons/global.svg',
+              icon2: 'assets/icons/chart.svg',
+            ),
+          );
+        });
+        AppNotification.show(
+          context,
+          title: 'Screen Created',
+          message: 'Platform screen "${result['title']}" has been created.',
+        );
+      }
+    }
+  }
+
+  void _deleteScreen(int index) async {
+    final screen = _screensData[index];
+    final confirmed = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Confirm Delete',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) => ConfirmDialog(
+        title: 'Delete Screen',
+        message: 'Are you sure you want to permanently delete "${screen.title}"? This action cannot be undone.',
+        confirmLabel: 'Yes, Delete',
+        isDestructive: true,
+      ),
+      transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+        opacity: anim1,
+        child: ScaleTransition(scale: anim1, child: child),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() {
+        _screensData.removeAt(index);
+      });
+      AppNotification.show(
+        context,
+        title: 'Screen Deleted',
+        message: 'Platform screen "${screen.title}" has been removed.',
+        type: NotificationType.error,
+      );
+    }
+  }
+
+  List<ScreenData> get _filteredScreens {
+    return _screensData.where((screen) {
+      final matchesStatus = _selectedStatus == 'All Status' || screen.status == _selectedStatus;
+      final matchesSearch =
+          screen.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          screen.path.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          screen.category.toLowerCase().contains(_searchQuery.toLowerCase());
+      return matchesStatus && matchesSearch;
+    }).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final filteredScreens = _filteredScreens;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Actions Row
-          _buildTopActions(),
+          _buildTopActions(filteredScreens.length),
           const SizedBox(height: 24),
 
           // Cards Grid
           LayoutBuilder(
             builder: (context, constraints) {
               int crossAxisCount = constraints.maxWidth > 1200 ? 3 : (constraints.maxWidth > 800 ? 2 : 1);
+
+              if (filteredScreens.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 80),
+                    child: Column(
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 64, color: Colors.white.withValues(alpha: 0.2)),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No screens found',
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -51,17 +189,23 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
                   mainAxisSpacing: 24,
                   childAspectRatio: 1.35,
                 ),
-                itemCount: _screensData.length,
+                itemCount: filteredScreens.length,
                 itemBuilder: (context, index) {
+                  final screen = filteredScreens[index];
                   return _ScreenCard(
-                    screen: _screensData[index],
+                    screen: screen,
                     onStatusToggle: () {
                       setState(() {
-                        final screen = _screensData[index];
-                        final newStatus = screen.status == 'Published' ? 'Draft' : 'Published';
-                        _screensData[index] = screen.copyWith(status: newStatus);
+                        // Find index in master list
+                        final masterIndex = _screensData.indexWhere((s) => s.title == screen.title);
+                        if (masterIndex != -1) {
+                          final s = _screensData[masterIndex];
+                          final newStatus = s.status == 'Published' ? 'Draft' : 'Published';
+                          _screensData[masterIndex] = s.copyWith(status: newStatus);
+                        }
                       });
                     },
+                    onDelete: () => _deleteScreen(index),
                   );
                 },
               );
@@ -129,9 +273,9 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
     );
   }
 
-  Widget _buildTopActions() {
+  Widget _buildTopActions(int foundCount) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 768;
+    final isMobile = screenWidth < 802;
 
     return SizedBox(
       width: double.infinity,
@@ -145,7 +289,7 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
           _buildHeaderButton(
             label: 'New Screen',
             icon: Icons.add,
-            onTap: () {},
+            onTap: _showNewScreenDialog,
             isPrimary: true,
           ),
 
@@ -160,7 +304,7 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Text(
-                    '${_screensData.length} screens found',
+                    '$foundCount screens found',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 13,
@@ -189,12 +333,17 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) => setState(() => _searchQuery = value),
                         style: const TextStyle(color: Colors.white, fontSize: 13),
+                        textAlignVertical: TextAlignVertical.center,
                         decoration: InputDecoration(
                           hintText: 'Search Screen...',
                           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                           border: InputBorder.none,
-                          isDense: true,
+                          isCollapsed: true,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                          suffixIcon: _searchQuery.isNotEmpty ? _buildClearButton() : null,
                         ),
                       ),
                     ),
@@ -205,6 +354,34 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildClearButton() {
+    bool isHovered = false;
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return MouseRegion(
+          onEnter: (_) => setState(() => isHovered = true),
+          onExit: (_) => setState(() => isHovered = false),
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () {
+              _searchController.clear();
+              this.setState(() => _searchQuery = '');
+            },
+            child: AnimatedScale(
+              scale: isHovered ? 1.2 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                Icons.close,
+                size: 16,
+                color: isHovered ? Colors.white : Colors.white.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -284,10 +461,12 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
 class _ScreenCard extends StatefulWidget {
   final ScreenData screen;
   final VoidCallback onStatusToggle;
+  final VoidCallback onDelete;
 
   const _ScreenCard({
     required this.screen,
     required this.onStatusToggle,
+    required this.onDelete,
   });
 
   @override
@@ -361,18 +540,6 @@ class _ScreenCardState extends State<_ScreenCard> {
                       ],
                     ),
                   ),
-                  if (_isHovered)
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                        ),
-                        child: Center(
-                          child: Icon(Icons.play_circle_filled_rounded, color: Colors.white, size: 48),
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -489,7 +656,7 @@ class _ScreenCardState extends State<_ScreenCard> {
                         const SizedBox(width: 8),
                         _buildSmallAction('assets/icons/copy.svg', () {}),
                         const SizedBox(width: 8),
-                        _buildSmallAction('assets/icons/delete.svg', () {}, isDestructive: true),
+                        _buildSmallAction('assets/icons/delete.svg', widget.onDelete, isDestructive: true),
                       ],
                     ),
                   ],

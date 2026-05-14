@@ -35,6 +35,22 @@ class AppTheme {
     end: Alignment.bottomCenter,
   );
 
+  static LinearGradient createGradient(Color base) {
+    return LinearGradient(
+      colors: [
+        base,
+        Color.from(
+          alpha: base.a,
+          red: (base.r * 0.8),
+          green: (base.g * 0.8),
+          blue: (base.b * 0.8),
+        ),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
+
   // ── Glassmorphism Decoration ──
   static BoxDecoration glassDecoration({
     double borderRadius = 16,
@@ -64,6 +80,26 @@ class AppTheme {
       offset: const Offset(0, 4),
     ),
   ];
+
+  static InputDecoration inputDecoration({
+    required String hint,
+    IconData? prefixIcon,
+    bool isFocused = false,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2), fontSize: 13),
+      prefixIcon: prefixIcon != null
+          ? Icon(
+              prefixIcon,
+              color: isFocused ? primaryColor : Colors.white.withValues(alpha: 0.3),
+              size: 18,
+            )
+          : null,
+      border: InputBorder.none,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
 
   // ── Theme Data ──
   static ThemeData get darkTheme {

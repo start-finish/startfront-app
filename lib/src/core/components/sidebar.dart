@@ -17,8 +17,8 @@ class Sidebar extends StatelessWidget {
     _NavItem(icon: 'assets/icons/widget management.svg', label: 'Widget Management', path: '/widget-management'),
     _NavItem(icon: 'assets/icons/widget preset.svg', label: 'Widget Preset', path: '/widget-preset'),
     _NavItem(icon: 'assets/icons/theme.svg', label: 'Global Themes', path: '/global-themes'),
-    // _NavItem(icon: 'assets/icons/tree.svg', label: 'Layers', path: '/layers'),
-    // _NavItem(icon: 'assets/icons/action.svg', label: 'Log', path: '/settings'),
+    _NavItem(icon: 'assets/icons/role permission.svg', label: 'Role & Permission', path: '/role-permission'),
+    _NavItem(icon: 'assets/icons/users.svg', label: 'User Management', path: '/user-management'),
     _NavItem(icon: 'assets/icons/settings.svg', label: 'Settings', path: '/settings'),
   ];
 
@@ -84,6 +84,7 @@ class Sidebar extends StatelessWidget {
                     children: _navItems.map((item) {
                       final isActive = currentPath == item.path;
                       return _SidebarButton(
+                        key: ValueKey(item.path),
                         item: item,
                         isActive: isActive,
                         isDrawer: isDrawer,
@@ -116,6 +117,7 @@ class _SidebarButton extends StatefulWidget {
   final bool isDrawer;
 
   const _SidebarButton({
+    super.key,
     required this.item,
     required this.isActive,
     required this.onTap,
@@ -154,7 +156,7 @@ class _SidebarButtonState extends State<_SidebarButton> {
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeOutCubic,
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: const Duration(milliseconds: 400),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     margin: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
@@ -208,7 +210,7 @@ class _SidebarButtonState extends State<_SidebarButton> {
                         ),
                         const SizedBox(width: 16),
                         AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 200),
+                          duration: const Duration(milliseconds: 400),
                           style: TextStyle(
                             color: widget.isActive
                                 ? Colors.white
@@ -274,7 +276,7 @@ class _SidebarButtonState extends State<_SidebarButton> {
 
                     // Icon Container
                     AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
+                      duration: const Duration(milliseconds: 400),
                       width: 52,
                       height: 52,
                       decoration: BoxDecoration(
@@ -313,21 +315,31 @@ class _SidebarButtonState extends State<_SidebarButton> {
                           curve: Curves.easeOutBack,
                           alignment: Alignment.center,
                           child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
+                            duration: const Duration(milliseconds: 400),
                             curve: Curves.easeOutCubic,
                             transform: Matrix4.translationValues(0, _hovering ? -1 : 0, 0),
-                            child: SvgPicture.asset(
-                              widget.item.icon,
-                              width: 36,
-                              height: 36,
-                              colorFilter: ColorFilter.mode(
-                                widget.isActive
+                            child: TweenAnimationBuilder<Color?>(
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeOutCubic,
+                              tween: ColorTween(
+                                begin: Colors.white.withValues(alpha: 0.4),
+                                end: widget.isActive
                                     ? Colors.white
                                     : _hovering
                                     ? Colors.white.withValues(alpha: 0.9)
                                     : Colors.white.withValues(alpha: 0.4),
-                                BlendMode.srcIn,
                               ),
+                              builder: (context, color, _) {
+                                return SvgPicture.asset(
+                                  widget.item.icon,
+                                  width: 36,
+                                  height: 36,
+                                  colorFilter: ColorFilter.mode(
+                                    color ?? Colors.white,
+                                    BlendMode.srcIn,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ),

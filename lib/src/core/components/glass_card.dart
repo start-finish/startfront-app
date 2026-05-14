@@ -1,8 +1,10 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../constants/theme.dart';
 
 /// A reusable glassmorphism card widget with backdrop blur effect.
+/// Optimized for Web performance by adjusting blur levels to prevent GPU context loss.
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -31,6 +33,10 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Optimization: Flutter Web CanvasKit can crash or experience context loss 
+    // if too many expensive blurs (sigma > 15) are rendered simultaneously.
+    final optimizedBlur = kIsWeb ? 10.0 : blurSigma;
+
     return Container(
       width: width,
       height: height,
@@ -38,7 +44,7 @@ class GlassCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          filter: ImageFilter.blur(sigmaX: optimizedBlur, sigmaY: optimizedBlur),
           child: Container(
             padding: padding ?? const EdgeInsets.all(20),
             decoration: BoxDecoration(

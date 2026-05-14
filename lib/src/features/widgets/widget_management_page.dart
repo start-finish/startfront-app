@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/theme.dart';
 import '../../core/providers/layout_provider.dart';
+import '../../core/components/confirm_dialog.dart';
+import '../../core/components/app_notification.dart';
+import 'components/new_widget_dialog.dart';
 
 class WidgetManagementPage extends ConsumerStatefulWidget {
   const WidgetManagementPage({super.key});
@@ -41,6 +44,219 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
       status: 'Active',
     ),
   ];
+
+  void _showCreateWidgetDialog() async {
+    final result = await showGeneralDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Create Widget',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, anim1, anim2) => const NewWidgetDialog(),
+      transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+        opacity: anim1,
+        child: ScaleTransition(
+          scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+          child: child,
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      final confirmed = await showGeneralDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Confirm',
+        barrierColor: Colors.black.withValues(alpha: 0.6),
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, anim1, anim2) => const ConfirmDialog(
+          title: 'Confirm Create',
+          message: 'Are you sure you want to register this new widget component?',
+        ),
+        transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(scale: anim1, child: child),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        setState(() {
+          _widgets.add(
+            _WidgetData(
+              name: result['name']!,
+              category: result['category']!,
+              description: result['description']!,
+              properties: 0,
+              functions: 0,
+              updatedAt: 'Just now',
+              status: 'Active',
+            ),
+          );
+        });
+        AppNotification.show(
+          context,
+          title: 'Widget Created',
+          message: 'New component "${result['name']}" is now available.',
+        );
+      }
+    }
+  }
+
+  void _showEditWidgetDialog(int index) async {
+    final widget = _widgets[index];
+    final result = await showGeneralDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Edit Widget',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, anim1, anim2) => NewWidgetDialog(
+        initialData: {
+          'name': widget.name,
+          'category': widget.category,
+          'description': widget.description,
+        },
+      ),
+      transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+        opacity: anim1,
+        child: ScaleTransition(
+          scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+          child: child,
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      final confirmed = await showGeneralDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Confirm',
+        barrierColor: Colors.black.withValues(alpha: 0.6),
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, anim1, anim2) => const ConfirmDialog(
+          title: 'Confirm Update',
+          message: 'Are you sure you want to save these changes to the widget configuration?',
+        ),
+        transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(scale: anim1, child: child),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        setState(() {
+          _widgets[index] = _WidgetData(
+            name: result['name']!,
+            category: result['category']!,
+            description: result['description']!,
+            properties: widget.properties,
+            functions: widget.functions,
+            updatedAt: 'Modified now',
+            status: widget.status,
+          );
+        });
+        AppNotification.show(
+          context,
+          title: 'Widget Updated',
+          message: 'Configuration for "${result['name']}" has been saved.',
+        );
+      }
+    }
+  }
+
+  void _deleteWidget(int index) async {
+    final widget = _widgets[index];
+    final confirmed = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Confirm Delete',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) => ConfirmDialog(
+        title: 'Delete Widget',
+        message: 'Are you sure you want to permanently remove "${widget.name}"? All associated configurations will be lost.',
+        confirmLabel: 'Yes, Delete',
+        isDestructive: true,
+      ),
+      transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+        opacity: anim1,
+        child: ScaleTransition(scale: anim1, child: child),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() {
+        _widgets.removeAt(index);
+      });
+      AppNotification.show(
+        context,
+        title: 'Widget Deleted',
+        message: 'Component "${widget.name}" has been removed.',
+        type: NotificationType.error,
+      );
+    }
+  }
+
+  void _duplicateWidget(int index) async {
+    final widget = _widgets[index];
+    final confirmed = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Confirm Duplicate',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) => ConfirmDialog(
+        title: 'Duplicate Widget',
+        message: 'Do you want to create a copy of "${widget.name}"?',
+      ),
+      transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+        opacity: anim1,
+        child: ScaleTransition(scale: anim1, child: child),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() {
+        _widgets.add(
+          _WidgetData(
+            name: '${widget.name} Copy',
+            category: widget.category,
+            description: widget.description,
+            properties: widget.properties,
+            functions: widget.functions,
+            updatedAt: 'Just now',
+            status: widget.status,
+          ),
+        );
+      });
+      AppNotification.show(
+        context,
+        title: 'Widget Duplicated',
+        message: '"${widget.name}" has been cloned successfully.',
+      );
+    }
+  }
+
+  void _showCodeDialog(int index) {
+    final widget = _widgets[index];
+    AppNotification.show(
+      context,
+      title: 'Code Preview',
+      message: 'Generating Dart code for "${widget.name}"...',
+      type: NotificationType.info,
+    );
+    // In a real app, this would show a dialog with the actual code
+  }
+
+  void _showPropertiesDialog(int index) {
+    final widget = _widgets[index];
+    AppNotification.show(
+      context,
+      title: 'Widget Properties',
+      message: 'Viewing ${widget.properties} properties for "${widget.name}".',
+      type: NotificationType.info,
+    );
+  }
 
   @override
   void initState() {
@@ -97,10 +313,10 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    _HeaderButton(
+                     _HeaderButton(
                       label: 'Create New Widget',
                       icon: Icons.add,
-                      onTap: () {},
+                      onTap: _showCreateWidgetDialog,
                       isPrimary: true,
                     ),
                   ],
@@ -122,6 +338,11 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
                           widget.status = widget.status == 'Active' ? 'Inactive' : 'Active';
                         });
                       },
+                      onEdit: () => _showEditWidgetDialog(index),
+                      onDelete: () => _deleteWidget(index),
+                      onDuplicate: () => _duplicateWidget(index),
+                      onViewCode: () => _showCodeDialog(index),
+                      onViewProperties: () => _showPropertiesDialog(index),
                     );
                   },
                 ),
@@ -284,8 +505,21 @@ class _WidgetData {
 class _WidgetListItem extends StatefulWidget {
   final _WidgetData data;
   final VoidCallback onToggle;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback onDuplicate;
+  final VoidCallback onViewCode;
+  final VoidCallback onViewProperties;
 
-  const _WidgetListItem({required this.data, required this.onToggle});
+  const _WidgetListItem({
+    required this.data,
+    required this.onToggle,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onDuplicate,
+    required this.onViewCode,
+    required this.onViewProperties,
+  });
 
   @override
   State<_WidgetListItem> createState() => _WidgetListItemState();
@@ -384,19 +618,28 @@ class _WidgetListItemState extends State<_WidgetListItem> {
               ),
 
               // Actions
-              _ActionButton(iconPath: 'assets/icons/view code.svg', onTap: () {}),
+              _ActionButton(
+                iconPath: 'assets/icons/view code.svg',
+                onTap: widget.onViewCode,
+              ),
               const SizedBox(width: 8),
               _ActionButton(
                 iconPath: 'assets/icons/eye.svg',
-                onTap: widget.onToggle,
-                color: widget.data.status == 'Active' ? null : const Color(0xFFFF5252),
+                onTap: widget.onViewProperties,
               ),
               const SizedBox(width: 8),
-              _ActionButton(iconPath: 'assets/icons/copy.svg', onTap: () {}),
+              _ActionButton(
+                iconPath: 'assets/icons/copy.svg',
+                onTap: widget.onDuplicate,
+              ),
               const SizedBox(width: 8),
-              _ActionButton(iconPath: 'assets/icons/edit.svg', onTap: () {}),
+              _ActionButton(iconPath: 'assets/icons/edit.svg', onTap: widget.onEdit),
               const SizedBox(width: 8),
-              _ActionButton(iconPath: 'assets/icons/delete.svg', onTap: () {}),
+              _ActionButton(
+                iconPath: 'assets/icons/delete.svg',
+                onTap: widget.onDelete,
+                color: Colors.redAccent,
+              ),
             ],
           ),
         ),

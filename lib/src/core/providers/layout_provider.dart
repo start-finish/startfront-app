@@ -9,3 +9,9 @@ final pageSubtitleProvider = StateProvider<String>((ref) => 'Overview of your pl
 
 /// Provider to manage custom action widgets in the header (e.g. Add User button).
 final headerActionsProvider = StateProvider<List<Widget>>((ref) => []);
+
+/// Provider to track current navigation index for transition direction.
+final navigationIndexProvider = StateProvider<int>((ref) => 0);
+
+/// Provider to track previous navigation index for transition direction.
+final previousNavigationIndexProvider = StateProvider<int>((ref) => 0);

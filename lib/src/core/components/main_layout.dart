@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../config/flavors.dart';
 import '../providers/layout_provider.dart';
 import 'background_blobs.dart';
@@ -17,13 +18,14 @@ class MainLayout extends ConsumerStatefulWidget {
 }
 
 class _MainLayoutState extends ConsumerState<MainLayout> {
+  static final _blobKey = GlobalKey();
   bool _isLogoutHovered = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 1024;
+    final isMobile = screenWidth < 802;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -35,8 +37,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           : null,
       body: Stack(
         children: [
-          // Animated background
-          const Positioned.fill(child: BackgroundBlobs()),
+          // Animated background - COMPLETELY DECOUPLED
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: BackgroundBlobs(key: _blobKey),
+            ),
+          ),
 
           // Main layout content + sidebar
           Positioned.fill(
@@ -60,7 +66,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             ),
           ),
 
-          // Sidebar on top of everything (Desktop only)
+          // Sidebar on top (Desktop only)
           if (!isMobile)
             const Positioned(
               left: 0,
@@ -112,25 +118,13 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         ),
         Row(
           children: [
-            // Custom Page Actions
             ...ref.watch(headerActionsProvider),
             if (ref.watch(headerActionsProvider).isNotEmpty) const SizedBox(width: 24),
-            // Placeholder circles (Hide on mobile)
-            if (!isMobile)
-              ...List.generate(
-                3,
-                (index) => Container(
-                  width: 40,
-                  height: 40,
-                  margin: const EdgeInsets.only(left: 12),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
+            if (!isMobile) ...[
+              _buildHeaderIcon(null, 'Notifications', svgPath: 'assets/icons/notification.svg', hasBadge: true),
+              _buildHeaderIcon(null, 'Profile', svgPath: 'assets/icons/user.svg'),
+            ],
             const SizedBox(width: 16),
-            // Logout Button
             MouseRegion(
               onEnter: (_) => setState(() => _isLogoutHovered = true),
               onExit: (_) => setState(() => _isLogoutHovered = false),
@@ -139,7 +133,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                 onTap: () {},
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                   decoration: BoxDecoration(
                     color: _isLogoutHovered ? Colors.white.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
@@ -190,6 +184,74 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildHeaderIcon(IconData? icon, String tooltip, {String? svgPath, bool hasBadge = false}) {
+    bool isHovered = false;
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return MouseRegion(
+          onEnter: (_) => setState(() => isHovered = true),
+          onExit: (_) => setState(() => isHovered = false),
+          cursor: SystemMouseCursors.click,
+          child: AnimatedScale(
+            scale: isHovered ? 1.1 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            child: Container(
+              width: 40,
+              height: 40,
+              margin: const EdgeInsets.only(left: 12),
+              decoration: BoxDecoration(
+                color: isHovered ? Colors.white.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isHovered ? Colors.white.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1),
+                ),
+                boxShadow: [
+                  if (isHovered)
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (svgPath != null)
+                    SvgPicture.asset(
+                      svgPath,
+                      width: 20,
+                      height: 20,
+                      colorFilter: ColorFilter.mode(
+                        isHovered ? Colors.white : Colors.white70,
+                        BlendMode.srcIn,
+                      ),
+                    )
+                  else if (icon != null)
+                    Icon(icon, color: isHovered ? Colors.white : Colors.white70, size: 20),
+                  if (hasBadge)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF0F172A), width: 1.5),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

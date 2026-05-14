@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/theme.dart';
 import '../../core/providers/layout_provider.dart';
+import '../../core/components/confirm_dialog.dart';
+import '../../core/components/app_notification.dart';
+import 'components/new_menu_item_dialog.dart';
 
 class NavItem {
   final String title;
@@ -79,6 +82,166 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
     });
   }
 
+  void _showAddMenuItemDialog() async {
+    final result = await showGeneralDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Add Menu Item',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, anim1, anim2) => const MenuItemDialog(),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(
+            scale: CurvedAnimation(
+              parent: anim1,
+              curve: Curves.easeOutBack,
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+
+    if (result != null && mounted) {
+      final confirmed = await showGeneralDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Confirm',
+        barrierColor: Colors.black.withValues(alpha: 0.6),
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, anim1, anim2) => const ConfirmDialog(
+          title: 'Confirm Add',
+          message: 'Are you sure you want to add this menu item to your platform navigation?',
+        ),
+        transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(scale: anim1, child: child),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        setState(() {
+          _items.add(
+            NavItem(
+              title: result['title']!,
+              tag: result['tag']!,
+              path: result['path']!,
+              icon: result['icon']!,
+              iconPath: 'assets/icons/container.svg', // Default fallback
+            ),
+          );
+        });
+        AppNotification.show(
+          context,
+          title: 'Item Added',
+          message: 'Menu item "${result['title']}" has been created.',
+        );
+      }
+    }
+  }
+
+  void _showEditMenuItemDialog(int index) async {
+    final item = _items[index];
+    final result = await showGeneralDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Edit Menu Item',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, anim1, anim2) => MenuItemDialog(
+        initialData: {
+          'title': item.title,
+          'path': item.path,
+          'tag': item.tag,
+          'icon': item.icon,
+        },
+      ),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(
+            scale: CurvedAnimation(
+              parent: anim1,
+              curve: Curves.easeOutBack,
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+
+    if (result != null && mounted) {
+      final confirmed = await showGeneralDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Confirm',
+        barrierColor: Colors.black.withValues(alpha: 0.6),
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, anim1, anim2) => const ConfirmDialog(
+          title: 'Confirm Update',
+          message: 'Are you sure you want to save the changes for this menu item?',
+        ),
+        transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(scale: anim1, child: child),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        setState(() {
+          _items[index] = NavItem(
+            title: result['title']!,
+            tag: result['tag']!,
+            path: result['path']!,
+            icon: result['icon']!,
+            iconPath: item.iconPath, // Keep original icon path for now
+            visible: item.visible,
+          );
+        });
+        AppNotification.show(
+          context,
+          title: 'Item Updated',
+          message: 'Menu item "${result['title']}" has been updated.',
+        );
+      }
+    }
+  }
+
+  void _deleteItem(int index) async {
+    final item = _items[index];
+    final confirmed = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Confirm Delete',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) => ConfirmDialog(
+        title: 'Delete Item',
+        message: 'Are you sure you want to permanently delete "${item.title}"? This action cannot be undone.',
+        confirmLabel: 'Yes, Delete',
+        isDestructive: true,
+      ),
+      transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
+        opacity: anim1,
+        child: ScaleTransition(scale: anim1, child: child),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() {
+        _items.removeAt(index);
+      });
+      AppNotification.show(
+        context,
+        title: 'Item Deleted',
+        message: 'Menu item "${item.title}" has been removed.',
+        type: NotificationType.error,
+      );
+    }
+  }
+
   void _toggleVisibility(int index) {
     setState(() {
       _items[index].visible = !_items[index].visible;
@@ -97,6 +260,9 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 802;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SingleChildScrollView(
@@ -107,46 +273,60 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
             _buildHeaderButton(
               label: 'Add Menu Item',
               iconPath: 'assets/icons/add.svg',
-              onTap: () {},
+              onTap: _showAddMenuItemDialog,
               isPrimary: true,
+              isFullWidth: isMobile,
             ),
             const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Main Navigation Column
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _SectionHeader(
-                        title: 'Main Navigation',
+            if (isMobile)
+              Column(
+                children: [
+                  _SectionHeader(
+                    title: 'Main Navigation',
+                    child: _NavigationList(
+                      items: _items,
+                      onToggleVisibility: _toggleVisibility,
+                      onEdit: _showEditMenuItemDialog,
+                      onDelete: _deleteItem,
+                      onReorder: _onReorder,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _SectionHeader(
+                    title: 'Navigation Preview',
+                    child: _NavigationPreview(items: _items),
+                  ),
+                ],
+              )
+            else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Main Navigation Column
+                  Expanded(
+                    flex: 3,
+                    child: _SectionHeader(
+                      title: 'Main Navigation',
                         child: _NavigationList(
                           items: _items,
                           onToggleVisibility: _toggleVisibility,
+                          onEdit: _showEditMenuItemDialog,
+                          onDelete: _deleteItem,
                           onReorder: _onReorder,
                         ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 32),
-                // Navigation Preview Column
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _SectionHeader(
-                        title: 'Navigation Preview',
-                        child: _NavigationPreview(items: _items),
-                      ),
-                    ],
+                  const SizedBox(width: 32),
+                  // Navigation Preview Column
+                  Expanded(
+                    flex: 2,
+                    child: _SectionHeader(
+                      title: 'Navigation Preview',
+                      child: _NavigationPreview(items: _items),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),
@@ -158,6 +338,7 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
     required String iconPath,
     VoidCallback? onTap,
     bool isPrimary = false,
+    bool isFullWidth = false,
   }) {
     bool isHovered = false;
     return StatefulBuilder(
@@ -168,6 +349,7 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
           curve: Curves.easeOutBack,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
+            width: isFullWidth ? double.infinity : null,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               gradient: isPrimary ? AppTheme.primaryGradient : null,
@@ -194,6 +376,7 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.add, color: Colors.white, size: 18),
                 const SizedBox(width: 8),
@@ -254,11 +437,15 @@ class _SectionHeader extends StatelessWidget {
 class _NavigationList extends StatelessWidget {
   final List<NavItem> items;
   final Function(int) onToggleVisibility;
+  final Function(int) onEdit;
+  final Function(int) onDelete;
   final Function(int, int) onReorder;
 
   const _NavigationList({
     required this.items,
     required this.onToggleVisibility,
+    required this.onEdit,
+    required this.onDelete,
     required this.onReorder,
   });
 
@@ -283,6 +470,8 @@ class _NavigationList extends StatelessWidget {
           item: item,
           index: index,
           onToggleVisibility: () => onToggleVisibility(index),
+          onEdit: () => onEdit(index),
+          onDelete: () => onDelete(index),
         );
       },
     );
@@ -293,12 +482,16 @@ class _NavItemCard extends StatefulWidget {
   final NavItem item;
   final int index;
   final VoidCallback onToggleVisibility;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   const _NavItemCard({
     super.key,
     required this.item,
     required this.index,
     required this.onToggleVisibility,
+    required this.onEdit,
+    required this.onDelete,
   });
 
   @override
@@ -345,7 +538,10 @@ class _NavItemCardState extends State<_NavItemCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
                           widget.item.title,
@@ -355,7 +551,6 @@ class _NavItemCardState extends State<_NavItemCard> {
                             fontSize: 15,
                           ),
                         ),
-                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
@@ -380,20 +575,34 @@ class _NavItemCardState extends State<_NavItemCard> {
                         color: Colors.white.withValues(alpha: 0.4),
                         fontSize: 12,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 12),
               // Actions
-              _ActionButton(
-                iconPath: widget.item.visible ? 'assets/icons/eye.svg' : 'assets/icons/eye close.svg',
-                onTap: widget.onToggleVisibility,
-                color: widget.item.visible ? null : const Color(0xFFFF5252),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ActionButton(
+                    iconPath: widget.item.visible ? 'assets/icons/eye.svg' : 'assets/icons/eye close.svg',
+                    onTap: widget.onToggleVisibility,
+                    color: widget.item.visible ? null : const Color(0xFFFF5252),
+                  ),
+                  const SizedBox(width: 8),
+                  _ActionButton(
+                    iconPath: 'assets/icons/edit.svg',
+                    onTap: widget.onEdit,
+                  ),
+                  const SizedBox(width: 8),
+                  _ActionButton(
+                    iconPath: 'assets/icons/delete.svg',
+                    isDestructive: true,
+                    onTap: widget.onDelete,
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              _ActionButton(iconPath: 'assets/icons/edit.svg'),
-              const SizedBox(width: 8),
-              _ActionButton(iconPath: 'assets/icons/delete.svg'),
             ],
           ),
         ),
@@ -406,7 +615,8 @@ class _ActionButton extends StatefulWidget {
   final String iconPath;
   final VoidCallback? onTap;
   final Color? color;
-  const _ActionButton({required this.iconPath, this.onTap, this.color});
+  final bool isDestructive;
+  const _ActionButton({required this.iconPath, this.onTap, this.color, this.isDestructive = false});
 
   @override
   State<_ActionButton> createState() => _ActionButtonState();
@@ -417,7 +627,7 @@ class _ActionButtonState extends State<_ActionButton> {
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = widget.color ?? Colors.white;
+    final baseColor = widget.isDestructive ? Colors.redAccent : (widget.color ?? Colors.white);
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
