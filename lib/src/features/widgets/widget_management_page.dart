@@ -174,7 +174,8 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, anim1, anim2) => ConfirmDialog(
         title: 'Delete Widget',
-        message: 'Are you sure you want to permanently remove "${widget.name}"? All associated configurations will be lost.',
+        message:
+            'Are you sure you want to permanently remove "${widget.name}"? All associated configurations will be lost.',
         confirmLabel: 'Yes, Delete',
         isDestructive: true,
       ),
@@ -313,7 +314,7 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                     _HeaderButton(
+                    _HeaderButton(
                       label: 'Create New Widget',
                       icon: Icons.add,
                       onTap: _showCreateWidgetDialog,

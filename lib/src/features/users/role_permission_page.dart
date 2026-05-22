@@ -245,7 +245,7 @@ class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Text(
             value,

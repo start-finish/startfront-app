@@ -3,60 +3,97 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/components/main_layout.dart';
-import '../features/dashboard/dashboard_page.dart';
-import '../features/platform/platform_page.dart';
-import '../features/navigation/navigation_page.dart';
-import '../features/widgets/widget_management_page.dart';
-import '../features/widgets/widget_presets_page.dart';
-import '../features/theme/global_theme_page.dart';
-
 // Deferred imports for code splitting
+import '../features/dashboard/dashboard_page.dart' deferred as dashboard;
+import '../features/platform/platform_page.dart' deferred as platform;
+import '../features/navigation/navigation_page.dart' deferred as nav;
+import '../features/widgets/widget_management_page.dart' deferred as widget_mgmt;
+import '../features/widgets/widget_presets_page.dart' deferred as widget_presets;
+import '../features/theme/global_theme_page.dart' deferred as themes;
 import '../features/users/users.dart' deferred as users;
 import '../features/analytics/analytics_page.dart' deferred as analytics;
 import '../features/settings/settings_page.dart' deferred as settings;
+import '../features/auth/login_page.dart' deferred as login;
+import '../features/auth/signup_page.dart' deferred as signup;
+
+/// Global navigator key
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 /// Global GoRouter provider.
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/',
+    navigatorKey: rootNavigatorKey,
+    initialLocation: '/login',
     routes: [
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => _DeferredPage(
+          loader: login.loadLibrary,
+          builder: () => login.LoginPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => _DeferredPage(
+          loader: signup.loadLibrary,
+          builder: () => signup.SignupPage(),
+        ),
+      ),
       ShellRoute(
         builder: (context, state, child) => MainLayout(child: child),
         routes: [
           GoRoute(
             path: '/',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: DashboardPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: _DeferredPage(
+                loader: dashboard.loadLibrary,
+                builder: () => dashboard.DashboardPage(),
+              ),
             ),
           ),
           GoRoute(
             path: '/platform',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: PlatformPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: _DeferredPage(
+                loader: platform.loadLibrary,
+                builder: () => platform.PlatformPage(),
+              ),
             ),
           ),
           GoRoute(
             path: '/navigation',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: NavigationPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: _DeferredPage(
+                loader: nav.loadLibrary,
+                builder: () => nav.NavigationPage(),
+              ),
             ),
           ),
           GoRoute(
             path: '/widget-management',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: WidgetManagementPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: _DeferredPage(
+                loader: widget_mgmt.loadLibrary,
+                builder: () => widget_mgmt.WidgetManagementPage(),
+              ),
             ),
           ),
           GoRoute(
             path: '/widget-preset',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: WidgetPresetsPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: _DeferredPage(
+                loader: widget_presets.loadLibrary,
+                builder: () => widget_presets.WidgetPresetsPage(),
+              ),
             ),
           ),
           GoRoute(
             path: '/global-themes',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: GlobalThemePage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: _DeferredPage(
+                loader: themes.loadLibrary,
+                builder: () => themes.GlobalThemePage(),
+              ),
             ),
           ),
           GoRoute(
@@ -126,14 +163,31 @@ class _DeferredPage extends StatelessWidget {
     return FutureBuilder(
       future: loader(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return builder();
-        }
-        return const Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF00D2D2),
-            strokeWidth: 2,
-          ),
+        final isDone = snapshot.connectionState == ConnectionState.done;
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          layoutBuilder: (currentChild, previousChildren) {
+            return Stack(
+              alignment: Alignment.topLeft,
+              children: <Widget>[
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            );
+          },
+          child: isDone
+              ? builder()
+              : const Align(
+                  alignment: Alignment.topLeft,
+                  key: ValueKey('loader'),
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF00D2D2),
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
         );
       },
     );

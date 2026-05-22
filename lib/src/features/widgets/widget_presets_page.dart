@@ -502,8 +502,8 @@ class _CategoryChipState extends State<_CategoryChip> {
               color: widget.isSelected
                   ? Colors.white.withValues(alpha: 0.1)
                   : _isHovered
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.transparent,
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -512,8 +512,8 @@ class _CategoryChipState extends State<_CategoryChip> {
                 color: widget.isSelected
                     ? Colors.white
                     : _isHovered
-                        ? Colors.white.withValues(alpha: 0.7)
-                        : Colors.white.withValues(alpha: 0.4),
+                    ? Colors.white.withValues(alpha: 0.7)
+                    : Colors.white.withValues(alpha: 0.4),
                 fontSize: 13,
                 fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w400,
               ),

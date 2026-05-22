@@ -372,7 +372,9 @@ class _GlobalThemePageState extends ConsumerState<GlobalThemePage> {
                                 ? []
                                 : [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: theme.shadowIntensity == 'Medium' ? 0.2 : 0.4),
+                                      color: Colors.black.withValues(
+                                        alpha: theme.shadowIntensity == 'Medium' ? 0.2 : 0.4,
+                                      ),
                                       blurRadius: theme.shadowIntensity == 'Medium' ? 10 : 20,
                                       offset: const Offset(0, 4),
                                     ),
@@ -418,10 +420,12 @@ class _GlobalThemePageState extends ConsumerState<GlobalThemePage> {
         children: children
             .asMap()
             .entries
-            .map((e) => Padding(
-                  padding: EdgeInsets.only(bottom: e.key == children.length - 1 ? 0 : 16),
-                  child: Row(children: [Expanded(child: e.value)]),
-                ))
+            .map(
+              (e) => Padding(
+                padding: EdgeInsets.only(bottom: e.key == children.length - 1 ? 0 : 16),
+                child: Row(children: [Expanded(child: e.value)]),
+              ),
+            )
             .toList(),
       );
     }
@@ -429,12 +433,14 @@ class _GlobalThemePageState extends ConsumerState<GlobalThemePage> {
       children: children
           .asMap()
           .entries
-          .map((e) => Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(right: e.key == children.length - 1 ? 0 : 24),
-                  child: e.value,
-                ),
-              ))
+          .map(
+            (e) => Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: e.key == children.length - 1 ? 0 : 24),
+                child: e.value,
+              ),
+            ),
+          )
           .toList(),
     );
   }
@@ -704,7 +710,9 @@ class _PreviewFullButtonState extends State<_PreviewFullButton> with SingleTicke
                   color: Colors.white.withValues(alpha: _isHovered ? 0.2 : 0.08),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: _isHovered ? AppTheme.primaryColor.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.1),
+                    color: _isHovered
+                        ? AppTheme.primaryColor.withValues(alpha: 0.5)
+                        : Colors.white.withValues(alpha: 0.1),
                   ),
                   boxShadow: _isHovered
                       ? [

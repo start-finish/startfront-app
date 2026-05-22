@@ -266,7 +266,7 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -307,13 +307,13 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
                     flex: 3,
                     child: _SectionHeader(
                       title: 'Main Navigation',
-                        child: _NavigationList(
-                          items: _items,
-                          onToggleVisibility: _toggleVisibility,
-                          onEdit: _showEditMenuItemDialog,
-                          onDelete: _deleteItem,
-                          onReorder: _onReorder,
-                        ),
+                      child: _NavigationList(
+                        items: _items,
+                        onToggleVisibility: _toggleVisibility,
+                        onEdit: _showEditMenuItemDialog,
+                        onDelete: _deleteItem,
+                        onReorder: _onReorder,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 32),
