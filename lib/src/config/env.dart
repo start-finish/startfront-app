@@ -29,7 +29,7 @@ final envConfigProvider = Provider<EnvConfig>((ref) {
   switch (flavor) {
     case Flavor.dev:
       return const EnvConfig(
-        apiBaseUrl: 'https://api-dev.startfront.io',
+        apiBaseUrl: 'http://localhost:8080',
         enableLogging: true,
         enableAnalytics: false,
       );

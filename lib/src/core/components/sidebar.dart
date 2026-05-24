@@ -27,7 +27,6 @@ class Sidebar extends StatelessWidget {
     final currentPath = GoRouterState.of(context).uri.toString();
 
     return Container(
-      // width: 70,
       margin: const EdgeInsets.fromLTRB(16, 16, 0, 16),
       child: Stack(
         clipBehavior: Clip.none,
@@ -57,19 +56,27 @@ class Sidebar extends StatelessWidget {
               const SizedBox(height: 32),
 
               // Logo
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.whiteGlassColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'LOGO',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    fontSize: 14,
-                    letterSpacing: 1,
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    context.go('/platform');
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.whiteGlassColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'LOGO',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        fontSize: 14,
+                        letterSpacing: 1,
+                      ),
+                    ),
                   ),
                 ),
               ),

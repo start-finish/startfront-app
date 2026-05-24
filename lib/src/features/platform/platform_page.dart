@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/components/glass_card.dart';
 import '../../core/constants/theme.dart';
 import '../../core/providers/layout_provider.dart';
@@ -96,6 +97,7 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
           title: 'Screen Created',
           message: 'Platform screen "${result['title']}" has been created.',
         );
+        context.go('/editor');
       }
     }
   }
@@ -648,7 +650,7 @@ class _ScreenCardState extends State<_ScreenCard> {
                           child: _buildActionButton(
                             iconPath: 'assets/icons/edit.svg',
                             label: 'Edit',
-                            onTap: () {},
+                            onTap: () => context.go('/editor'),
                           ),
                         ),
                         const SizedBox(width: 8),

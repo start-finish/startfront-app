@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
 import 'dart:math' as math;
@@ -28,7 +29,7 @@ class _LoginPageState extends ConsumerState<LoginPage> with TickerProviderStateM
     super.initState();
     _backgroundController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 15),
+      duration: const Duration(seconds: 30),
     )..repeat();
   }
 
@@ -171,16 +172,12 @@ class _LoginPageState extends ConsumerState<LoginPage> with TickerProviderStateM
 
                             Align(
                               alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () {},
-                                child: Text(
-                                  'Forgot Password?',
-                                  style: TextStyle(
-                                    color: AppTheme.primaryColor.withValues(alpha: 0.7),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                              child: HoverTextButton(
+                                text: 'Forgot Password?',
+                                onTap: () {},
+                                color: AppTheme.primaryColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -266,59 +263,100 @@ class _LoginPageState extends ConsumerState<LoginPage> with TickerProviderStateM
   }
 
   Widget _buildLoginButton(bool isLoading) {
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryColor,
-            const Color(0xFF009797),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryColor.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isLoading ? null : _handleLogin,
-          borderRadius: BorderRadius.circular(16),
-          child: Center(
-            child: isLoading
-                ? const SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                : const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'SIGN IN',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 15,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
-                    ],
+    bool isHovered = false;
+    return StatefulBuilder(
+      builder: (context, setInnerState) {
+        return MouseRegion(
+          cursor: isLoading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+          onEnter: (_) => setInnerState(() => isHovered = true),
+          onExit: (_) => setInnerState(() => isHovered = false),
+          child: GestureDetector(
+            onTap: isLoading ? null : _handleLogin,
+            child: AnimatedPadding(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.only(bottom: isHovered ? 3.0 : 0.0, top: isHovered ? 0.0 : 3.0),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                width: double.infinity,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isHovered
+                        ? [
+                            AppTheme.primaryColor.withValues(alpha: 1.0),
+                            const Color(0xFF00B8B8),
+                          ]
+                        : [
+                            AppTheme.primaryColor,
+                            const Color(0xFF009797),
+                          ],
                   ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withValues(
+                        alpha: isHovered ? 0.6 : 0.3,
+                      ),
+                      blurRadius: isHovered ? 32 : 15,
+                      spreadRadius: isHovered ? 4 : 0,
+                      offset: Offset(0, isHovered ? 12 : 8),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Center(
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'SIGN IN',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 15,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeOutCubic,
+                                width: isHovered ? 16 : 12,
+                              ),
+                              AnimatedSlide(
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeOutCubic,
+                                offset: Offset(isHovered ? 0.2 : 0.0, 0),
+                                child: SvgPicture.asset(
+                                  'assets/icons/login.svg',
+                                  width: 32,
+                                  height: 32,
+                                  colorFilter: const ColorFilter.mode(
+                                    Colors.white,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -333,16 +371,13 @@ class _LoginPageState extends ConsumerState<LoginPage> with TickerProviderStateM
             fontSize: 14,
           ),
         ),
-        TextButton(
-          onPressed: () => context.push('/signup'),
-          child: Text(
-            'Join Now',
-            style: TextStyle(
-              color: AppTheme.primaryColor,
-              fontWeight: FontWeight.w800,
-              fontSize: 14,
-            ),
-          ),
+        const SizedBox(width: 4),
+        HoverTextButton(
+          text: 'Join Now',
+          onTap: () => context.push('/signup'),
+          color: AppTheme.primaryColor,
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
         ),
       ],
     );

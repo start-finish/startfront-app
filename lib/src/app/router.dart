@@ -15,6 +15,7 @@ import '../features/analytics/analytics_page.dart' deferred as analytics;
 import '../features/settings/settings_page.dart' deferred as settings;
 import '../features/auth/login_page.dart' deferred as login;
 import '../features/auth/signup_page.dart' deferred as signup;
+import '../features/editor/editor_page.dart' deferred as editor;
 
 /// Global navigator key
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -37,6 +38,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => _DeferredPage(
           loader: signup.loadLibrary,
           builder: () => signup.SignupPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/editor',
+        builder: (context, state) => _DeferredPage(
+          loader: editor.loadLibrary,
+          builder: () => editor.EditorPage(),
         ),
       ),
       ShellRoute(
