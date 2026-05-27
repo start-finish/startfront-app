@@ -60,7 +60,20 @@ class _LoginPageState extends ConsumerState<LoginPage> with TickerProviderStateM
         );
 
     if (success && mounted) {
+      AppNotification.show(
+        context,
+        title: 'Login Successful',
+        message: 'Welcome back to Startfront!',
+        type: NotificationType.success,
+      );
       context.go('/');
+    } else if (mounted) {
+      AppNotification.show(
+        context,
+        title: 'Login Failed',
+        message: 'Invalid email or password. Please try again.',
+        type: NotificationType.error,
+      );
     }
   }
 

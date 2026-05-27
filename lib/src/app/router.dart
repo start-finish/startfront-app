@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/components/main_layout.dart';
+import '../core/components/skeleton_loader.dart';
 // Deferred imports for code splitting
 import '../features/dashboard/dashboard_page.dart' deferred as dashboard;
 import '../features/platform/platform_page.dart' deferred as platform;
@@ -185,15 +186,60 @@ class _DeferredPage extends StatelessWidget {
           },
           child: isDone
               ? builder()
-              : const Align(
-                  alignment: Alignment.topLeft,
-                  key: ValueKey('loader'),
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF00D2D2),
-                      strokeWidth: 2,
-                    ),
+              : Padding(
+                  key: const ValueKey('loader'),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const SkeletonLoader(width: 180, height: 28),
+                          SkeletonLoader(width: 100, height: 38, borderRadius: BorderRadius.circular(10)),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Expanded(
+                        child: ListView.separated(
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: 4,
+                          separatorBuilder: (context, index) => const SizedBox(height: 16),
+                          itemBuilder: (context, index) => Container(
+                            height: 100,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.04),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.08),
+                              ),
+                            ),
+                            child: const Row(
+                              children: [
+                                SkeletonLoader(
+                                  width: 48,
+                                  height: 48,
+                                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                                ),
+                                SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SkeletonLoader(width: 140, height: 16),
+                                      SizedBox(height: 8),
+                                      SkeletonLoader(width: 260, height: 12),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
         );

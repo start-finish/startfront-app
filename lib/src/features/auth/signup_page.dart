@@ -63,7 +63,20 @@ class _SignupPageState extends ConsumerState<SignupPage> with TickerProviderStat
         );
 
     if (success && mounted) {
+      AppNotification.show(
+        context,
+        title: 'Account Created',
+        message: 'Welcome to Startfront! Your account was registered successfully.',
+        type: NotificationType.success,
+      );
       context.go('/');
+    } else if (mounted) {
+      AppNotification.show(
+        context,
+        title: 'Signup Failed',
+        message: 'Username or email already exists. Please try again.',
+        type: NotificationType.error,
+      );
     }
   }
 

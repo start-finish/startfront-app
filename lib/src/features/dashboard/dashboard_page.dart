@@ -8,6 +8,8 @@ import '../../core/constants/theme.dart';
 import 'components/stats_card.dart';
 import 'components/dashboard_chart.dart';
 import '../../core/components/hoverable_text_button.dart';
+import '../../core/components/skeleton_loader.dart';
+import 'dashboard_provider.dart';
 
 /// Main dashboard page with stats grid, chart areas, and activity log.
 class DashboardPage extends ConsumerStatefulWidget {
@@ -31,6 +33,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final dashboardAsync = ref.watch(dashboardDataProvider);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -38,13 +42,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         spacing: 24,
         children: [
           // ── Stats Grid ──
-          _buildStatsGrid(),
+          dashboardAsync.when(
+            data: (data) => _buildStatsGrid(data),
+            loading: () => _buildStatsGridSkeleton(),
+            error: (err, stack) => _buildErrorState(err),
+          ),
 
           // ── Charts Row ──
-          _buildChartsRow(),
+          dashboardAsync.when(
+            data: (data) => _buildChartsRow(data),
+            loading: () => _buildChartsRowSkeleton(),
+            error: (err, stack) => const SizedBox.shrink(),
+          ),
 
           // ── Activity Log ──
-          _buildActivityLog(),
+          dashboardAsync.when(
+            data: (data) => _buildActivityLog(data),
+            loading: () => _buildActivityLogSkeleton(),
+            error: (err, stack) => const SizedBox.shrink(),
+          ),
 
           const SizedBox(height: 12),
         ],
@@ -52,7 +68,184 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildStatsGrid() {
+  String _formatNumber(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    } else if (number >= 1000) {
+      final str = number.toString();
+      final buffer = StringBuffer();
+      for (int i = 0; i < str.length; i++) {
+        if (i > 0 && (str.length - i) % 3 == 0) {
+          buffer.write(',');
+        }
+        buffer.write(str[i]);
+      }
+      return buffer.toString();
+    }
+    return number.toString();
+  }
+
+  Color _parseHexColor(String hex) {
+    try {
+      return Color(int.parse(hex.replaceFirst('#', '0xFF')));
+    } catch (_) {
+      return const Color(0xFF3B82F6);
+    }
+  }
+
+  Widget _buildErrorState(dynamic error) {
+    return Center(
+      child: GlassCard(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 40),
+            const SizedBox(height: 12),
+            Text(
+              'Failed to load dashboard metrics: $error',
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsGridSkeleton() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: List.generate(4, (index) {
+            return SizedBox(
+              width: (constraints.maxWidth - 48) / 4 > 240
+                  ? (constraints.maxWidth - 48) / 4
+                  : (constraints.maxWidth - 16) / 2,
+              height: 180,
+              child: const GlassCard(
+                padding: EdgeInsets.all(24),
+                borderRadius: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SkeletonLoader(width: 48, height: 48, borderRadius: BorderRadius.all(Radius.circular(10))),
+                        SkeletonLoader(width: 48, height: 16),
+                      ],
+                    ),
+                    Spacer(),
+                    SkeletonLoader(width: 100, height: 36),
+                    SizedBox(height: 8),
+                    SkeletonLoader(width: 80, height: 12),
+                  ],
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  Widget _buildChartsRowSkeleton() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 800;
+        final cardHeight = isWide ? 350.0 : 300.0;
+        final child = GlassCard(
+          height: cardHeight,
+          padding: const EdgeInsets.all(24),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SkeletonLoader(width: 150, height: 16),
+                  SkeletonLoader(width: 60, height: 12),
+                ],
+              ),
+              SizedBox(height: 24),
+              Expanded(
+                child: SkeletonLoader(
+                  width: double.infinity,
+                  height: double.infinity,
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+        );
+
+        if (isWide) {
+          return Row(
+            spacing: 24,
+            children: [
+              Expanded(child: child),
+              Expanded(child: child),
+            ],
+          );
+        } else {
+          return Column(
+            spacing: 16,
+            children: [
+              child,
+              child,
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildActivityLogSkeleton() {
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SkeletonLoader(width: 180, height: 18),
+              SkeletonLoader(width: 60, height: 12),
+            ],
+          ),
+          const SizedBox(height: 24),
+          ...List.generate(4, (index) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              child: Row(
+                children: [
+                  SkeletonLoader(width: 44, height: 44, borderRadius: BorderRadius.all(Radius.circular(10))),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonLoader(width: 180, height: 13),
+                        SizedBox(height: 6),
+                        SkeletonLoader(width: 120, height: 11),
+                      ],
+                    ),
+                  ),
+                  SkeletonLoader(width: 60, height: 11),
+                  SizedBox(width: 24),
+                  SkeletonLoader(width: 50, height: 20, borderRadius: BorderRadius.all(Radius.circular(6))),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid(DashboardData data) {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Wrap(
@@ -64,9 +257,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ? (constraints.maxWidth - 48) / 4
                   : (constraints.maxWidth - 16) / 2,
               height: 180,
-              child: const StatsCard(
+              child: StatsCard(
                 title: 'Total Users',
-                value: '1,247',
+                value: _formatNumber(data.totalUsers),
                 change: '+12.5%',
                 iconPath: 'assets/icons/users.svg',
               ),
@@ -76,9 +269,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ? (constraints.maxWidth - 48) / 4
                   : (constraints.maxWidth - 16) / 2,
               height: 180,
-              child: const StatsCard(
+              child: StatsCard(
                 title: 'Active Sessions',
-                value: '48',
+                value: _formatNumber(data.activeUsers),
                 change: '+8.3%',
                 iconPath: 'assets/icons/active chart.svg',
               ),
@@ -88,9 +281,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ? (constraints.maxWidth - 48) / 4
                   : (constraints.maxWidth - 16) / 2,
               height: 180,
-              child: const StatsCard(
+              child: StatsCard(
                 title: 'Page Views',
-                value: '11,332',
+                value: _formatNumber(data.pageViews),
                 change: '+23.1%',
                 iconPath: 'assets/icons/eye.svg',
               ),
@@ -100,9 +293,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ? (constraints.maxWidth - 48) / 4
                   : (constraints.maxWidth - 16) / 2,
               height: 180,
-              child: const StatsCard(
+              child: StatsCard(
                 title: 'Growth Rate',
-                value: '4.6%',
+                value: data.growthRate,
                 change: '+2.4%',
                 iconPath: 'assets/icons/chart.svg',
               ),
@@ -113,7 +306,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildChartsRow() {
+  Widget _buildChartsRow(DashboardData data) {
+    final dynamicOffset = (data.totalUsers % 5) * 0.2;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth > 800) {
@@ -125,14 +320,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   title: 'Recently Register',
                   subtitle: 'Last 7 days',
                   color: const Color(0xFF3B82F6),
-                  spots: const [
-                    FlSpot(0, 3),
-                    FlSpot(1, 4),
-                    FlSpot(2, 3.5),
-                    FlSpot(3, 5),
-                    FlSpot(4, 4),
-                    FlSpot(5, 6),
-                    FlSpot(6, 5.5),
+                  spots: [
+                    FlSpot(0, 3 + dynamicOffset),
+                    FlSpot(1, 4 + dynamicOffset),
+                    FlSpot(2, 3.5 + dynamicOffset),
+                    FlSpot(3, 5 + dynamicOffset),
+                    FlSpot(4, 4 + dynamicOffset),
+                    FlSpot(5, 6 + dynamicOffset),
+                    FlSpot(6, 5.5 + dynamicOffset),
                   ],
                 ),
               ),
@@ -141,14 +336,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   title: 'Recently Subscription',
                   subtitle: 'This month',
                   color: AppTheme.primaryColor,
-                  spots: const [
-                    FlSpot(0, 2),
-                    FlSpot(1, 3),
-                    FlSpot(2, 2.5),
-                    FlSpot(3, 4),
-                    FlSpot(4, 3.5),
-                    FlSpot(5, 5),
-                    FlSpot(6, 4.5),
+                  spots: [
+                    FlSpot(0, 2 + dynamicOffset),
+                    FlSpot(1, 3 + dynamicOffset),
+                    FlSpot(2, 2.5 + dynamicOffset),
+                    FlSpot(3, 4 + dynamicOffset),
+                    FlSpot(4, 3.5 + dynamicOffset),
+                    FlSpot(5, 5 + dynamicOffset),
+                    FlSpot(6, 4.5 + dynamicOffset),
                   ],
                 ),
               ),
@@ -163,14 +358,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 title: 'Recently Register',
                 subtitle: 'Last 7 days',
                 color: const Color(0xFF3B82F6),
-                spots: const [
-                  FlSpot(0, 3),
-                  FlSpot(1, 4),
-                  FlSpot(2, 3.5),
-                  FlSpot(3, 5),
-                  FlSpot(4, 4),
-                  FlSpot(5, 6),
-                  FlSpot(6, 5.5),
+                spots: [
+                  FlSpot(0, 3 + dynamicOffset),
+                  FlSpot(1, 4 + dynamicOffset),
+                  FlSpot(2, 3.5 + dynamicOffset),
+                  FlSpot(3, 5 + dynamicOffset),
+                  FlSpot(4, 4 + dynamicOffset),
+                  FlSpot(5, 6 + dynamicOffset),
+                  FlSpot(6, 5.5 + dynamicOffset),
                 ],
               ),
               _HoverableChartCard(
@@ -178,14 +373,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 title: 'Recently Subscription',
                 subtitle: 'This month',
                 color: const Color(0xFF6366F1),
-                spots: const [
-                  FlSpot(0, 2),
-                  FlSpot(1, 3),
-                  FlSpot(2, 2.5),
-                  FlSpot(3, 4),
-                  FlSpot(4, 3.5),
-                  FlSpot(5, 5),
-                  FlSpot(6, 4.5),
+                spots: [
+                  FlSpot(0, 2 + dynamicOffset),
+                  FlSpot(1, 3 + dynamicOffset),
+                  FlSpot(2, 2.5 + dynamicOffset),
+                  FlSpot(3, 4 + dynamicOffset),
+                  FlSpot(4, 3.5 + dynamicOffset),
+                  FlSpot(5, 5 + dynamicOffset),
+                  FlSpot(6, 4.5 + dynamicOffset),
                 ],
               ),
             ],
@@ -195,7 +390,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildActivityLog() {
+  Widget _buildActivityLog(DashboardData data) {
     return GlassCard(
       padding: EdgeInsets.zero,
       child: Stack(
@@ -262,34 +457,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                _LogItem(
-                  action: 'Update user details',
-                  target: 'alex@mail.com',
-                  time: '2 min ago',
-                  type: 'Update',
-                  color: const Color(0xFF3B82F6),
-                ),
-                _LogItem(
-                  action: 'Delete user permanently',
-                  target: 'jane.doe@site.io',
-                  time: '15 min ago',
-                  type: 'Delete',
-                  color: const Color(0xFFEF4444),
-                ),
-                _LogItem(
-                  action: 'Create new subscription plan',
-                  target: 'System',
-                  time: '1 hr ago',
-                  type: 'Create',
-                  color: const Color(0xFF10B981),
-                ),
-                _LogItem(
-                  action: 'Change system settings',
-                  target: 'Admin',
-                  time: '3 hr ago',
-                  type: 'Update',
-                  color: const Color(0xFF3B82F6),
-                ),
+                ...data.activityLog.map((item) {
+                  return _LogItem(
+                    action: item.action,
+                    target: item.target,
+                    time: item.time,
+                    type: item.type,
+                    color: _parseHexColor(item.color),
+                  );
+                }),
               ],
             ),
           ),

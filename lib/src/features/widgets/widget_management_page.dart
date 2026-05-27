@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -5,6 +6,8 @@ import '../../core/constants/theme.dart';
 import '../../core/providers/layout_provider.dart';
 import '../../core/components/confirm_dialog.dart';
 import '../../core/components/app_notification.dart';
+import '../../core/components/skeleton_loader.dart';
+import '../../core/services/base_service.dart';
 import 'components/new_widget_dialog.dart';
 
 class WidgetManagementPage extends ConsumerStatefulWidget {
@@ -15,38 +18,56 @@ class WidgetManagementPage extends ConsumerStatefulWidget {
 }
 
 class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
-  final List<_WidgetData> _widgets = [
-    _WidgetData(
-      name: 'ElevatedButton',
-      category: 'Control',
-      description: 'A clickable button with elevation and hover effects',
-      properties: 5,
-      functions: 2,
-      updatedAt: '2026-01-20',
-      status: 'Active',
-    ),
-    _WidgetData(
-      name: 'Text',
-      category: 'Display',
-      description: 'A customizable text element with styling options',
-      properties: 4,
-      functions: 1,
-      updatedAt: '2026-01-18',
-      status: 'Active',
-    ),
-    _WidgetData(
-      name: 'TextField',
-      category: 'Input',
-      description: 'An input field for text entry with validation',
-      properties: 4,
-      functions: 2,
-      updatedAt: '2026-01-14',
-      status: 'Active',
-    ),
-  ];
+  final List<_WidgetData> _widgets = [];
+  bool _isLoading = true;
+  int _totalWidgets = 0;
+  int _controlWidgets = 0;
+  int _inputWidgets = 0;
+  int _layoutWidgets = 0;
+  int _displayWidgets = 0;
+
+  Future<void> _fetchWidgets() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final baseService = ref.read(baseServiceProvider);
+      final response = await baseService.listWidgets(page: 1, limit: 100);
+      
+      if (response != null && mounted) {
+        final data = response as Map<String, dynamic>;
+        final counts = data['counts'] ?? {};
+        final items = data['widgets'] as List<dynamic>? ?? [];
+
+        setState(() {
+          _widgets.clear();
+          _widgets.addAll(items.map((item) => _WidgetData.fromJson(item as Map<String, dynamic>)));
+          _totalWidgets = counts['total'] ?? _widgets.length;
+          _controlWidgets = counts['control'] ?? 0;
+          _inputWidgets = counts['input'] ?? 0;
+          _layoutWidgets = counts['layout'] ?? 0;
+          _displayWidgets = counts['display'] ?? 0;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        AppNotification.show(
+          context,
+          title: 'Error Fetching Widgets',
+          message: e.toString(),
+          type: NotificationType.error,
+        );
+      }
+    }
+  }
 
   void _showCreateWidgetDialog() async {
-    final result = await showGeneralDialog<Map<String, String>>(
+    final result = await showGeneralDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Create Widget',
@@ -80,31 +101,60 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
       );
 
       if (confirmed == true && mounted) {
-        setState(() {
-          _widgets.add(
-            _WidgetData(
-              name: result['name']!,
-              category: result['category']!,
-              description: result['description']!,
-              properties: 0,
-              functions: 0,
-              updatedAt: 'Just now',
-              status: 'Active',
-            ),
+        try {
+          final baseService = ref.read(baseServiceProvider);
+          final rawName = result['name']!;
+          final key = rawName
+              .toLowerCase()
+              .replaceAll(RegExp(r'[^a-z0-9_]'), '_')
+              .replaceAll(RegExp(r'_+'), '_');
+
+          final configSchema = {
+            'description': result['description'] ?? '',
+            'properties': result['properties'] ?? [],
+            'functions': result['functions'] ?? [],
+            'renderCode': result['renderCode'] ?? '',
+            'properties_count': (result['properties'] as List).length,
+            'functions_count': (result['functions'] as List).length,
+          };
+
+          await baseService.createWidget(
+            key: key,
+            label: rawName,
+            category: result['category']!.toLowerCase(),
+            isBuiltin: false,
+            version: '1.0.0',
+            iconType: 'svg',
+            iconValue: 'widget management.svg',
+            configSchema: configSchema,
           );
-        });
-        AppNotification.show(
-          context,
-          title: 'Widget Created',
-          message: 'New component "${result['name']}" is now available.',
-        );
+
+          await _fetchWidgets();
+
+          if (mounted) {
+            AppNotification.show(
+              context,
+              title: 'Widget Created',
+              message: 'New component "$rawName" is now available.',
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            AppNotification.show(
+              context,
+              title: 'Creation Failed',
+              message: e.toString(),
+              type: NotificationType.error,
+            );
+          }
+        }
       }
     }
   }
 
   void _showEditWidgetDialog(int index) async {
     final widget = _widgets[index];
-    final result = await showGeneralDialog<Map<String, String>>(
+    final result = await showGeneralDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Edit Widget',
@@ -115,6 +165,9 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
           'name': widget.name,
           'category': widget.category,
           'description': widget.description,
+          'properties': widget.propertiesList,
+          'functions': widget.functionsList,
+          'renderCode': widget.renderCode,
         },
       ),
       transitionBuilder: (context, anim1, anim2, child) => FadeTransition(
@@ -144,22 +197,50 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
       );
 
       if (confirmed == true && mounted) {
-        setState(() {
-          _widgets[index] = _WidgetData(
-            name: result['name']!,
-            category: result['category']!,
-            description: result['description']!,
-            properties: widget.properties,
-            functions: widget.functions,
-            updatedAt: 'Modified now',
-            status: widget.status,
+        try {
+          final baseService = ref.read(baseServiceProvider);
+          final rawName = result['name']!;
+          final key = rawName
+              .toLowerCase()
+              .replaceAll(RegExp(r'[^a-z0-9_]'), '_')
+              .replaceAll(RegExp(r'_+'), '_');
+
+          final configSchema = {
+            'description': result['description'] ?? '',
+            'properties': result['properties'] ?? [],
+            'functions': result['functions'] ?? [],
+            'renderCode': result['renderCode'] ?? '',
+            'properties_count': (result['properties'] as List).length,
+            'functions_count': (result['functions'] as List).length,
+          };
+
+          await baseService.updateWidget(
+            id: widget.id!,
+            key: key,
+            label: rawName,
+            category: result['category']!.toLowerCase(),
+            configSchema: configSchema,
           );
-        });
-        AppNotification.show(
-          context,
-          title: 'Widget Updated',
-          message: 'Configuration for "${result['name']}" has been saved.',
-        );
+
+          await _fetchWidgets();
+
+          if (mounted) {
+            AppNotification.show(
+              context,
+              title: 'Widget Updated',
+              message: 'Configuration for "$rawName" has been saved.',
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            AppNotification.show(
+              context,
+              title: 'Update Failed',
+              message: e.toString(),
+              type: NotificationType.error,
+            );
+          }
+        }
       }
     }
   }
@@ -186,15 +267,30 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
     );
 
     if (confirmed == true && mounted) {
-      setState(() {
-        _widgets.removeAt(index);
-      });
-      AppNotification.show(
-        context,
-        title: 'Widget Deleted',
-        message: 'Component "${widget.name}" has been removed.',
-        type: NotificationType.error,
-      );
+      try {
+        final baseService = ref.read(baseServiceProvider);
+        await baseService.deleteWidget(widget.id!);
+        
+        await _fetchWidgets();
+
+        if (mounted) {
+          AppNotification.show(
+            context,
+            title: 'Widget Deleted',
+            message: 'Component "${widget.name}" has been removed.',
+            type: NotificationType.error,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          AppNotification.show(
+            context,
+            title: 'Delete Failed',
+            message: e.toString(),
+            type: NotificationType.error,
+          );
+        }
+      }
     }
   }
 
@@ -217,45 +313,245 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
     );
 
     if (confirmed == true && mounted) {
-      setState(() {
-        _widgets.add(
-          _WidgetData(
-            name: '${widget.name} Copy',
-            category: widget.category,
-            description: widget.description,
-            properties: widget.properties,
-            functions: widget.functions,
-            updatedAt: 'Just now',
-            status: widget.status,
-          ),
+      try {
+        final baseService = ref.read(baseServiceProvider);
+        final duplicateName = '${widget.name} Copy';
+        final duplicateKey = '${widget.key}_copy';
+        
+        final configSchema = {
+          'description': widget.description,
+          'properties': widget.propertiesList,
+          'functions': widget.functionsList,
+          'renderCode': widget.renderCode,
+          'properties_count': widget.properties,
+          'functions_count': widget.functions,
+        };
+
+        await baseService.createWidget(
+          key: duplicateKey,
+          label: duplicateName,
+          category: widget.category.toLowerCase(),
+          isBuiltin: false,
+          version: '1.0.0',
+          iconType: 'svg',
+          iconValue: 'widget management.svg',
+          configSchema: configSchema,
         );
-      });
-      AppNotification.show(
-        context,
-        title: 'Widget Duplicated',
-        message: '"${widget.name}" has been cloned successfully.',
-      );
+
+        await _fetchWidgets();
+
+        if (mounted) {
+          AppNotification.show(
+            context,
+            title: 'Widget Duplicated',
+            message: '"${widget.name}" has been cloned successfully.',
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          AppNotification.show(
+            context,
+            title: 'Duplicate Failed',
+            message: e.toString(),
+            type: NotificationType.error,
+          );
+        }
+      }
     }
   }
 
   void _showCodeDialog(int index) {
     final widget = _widgets[index];
-    AppNotification.show(
-      context,
-      title: 'Code Preview',
-      message: 'Generating Dart code for "${widget.name}"...',
-      type: NotificationType.info,
+    final String widgetCode = widget.renderCode.trim().isNotEmpty
+        ? widget.renderCode
+        : '''import 'package:flutter/material.dart';
+
+/// ${widget.name} - Custom App Component
+///
+/// Category: ${widget.category}
+/// Description: ${widget.description}
+class ${widget.name} extends StatelessWidget {
+  const ${widget.name}({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blueAccent.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+      ),
+      child: const Text(
+        '${widget.name} Component',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
     );
-    // In a real app, this would show a dialog with the actual code
+  }
+}
+''';
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Code Preview',
+      barrierColor: Colors.black.withValues(alpha: 0.8),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 600,
+              height: 500,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${widget.name.toUpperCase()} CODE PREVIEW',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white54),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: SingleChildScrollView(
+                        child: Text(
+                          widgetCode,
+                          style: const TextStyle(
+                            color: Color(0xFF38BDF8),
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _showPropertiesDialog(int index) {
     final widget = _widgets[index];
-    AppNotification.show(
-      context,
-      title: 'Widget Properties',
-      message: 'Viewing ${widget.properties} properties for "${widget.name}".',
-      type: NotificationType.info,
+    
+    final Map<String, dynamic> schemaMap = {
+      "widget": widget.name,
+      "key": widget.key,
+      "category": widget.category.toLowerCase(),
+      "description": widget.description,
+      "properties": widget.propertiesList,
+      "functions": widget.functionsList,
+      "renderCode": widget.renderCode,
+      "metadata": {
+        "version": "1.0.0",
+        "builtin": widget.status == 'Built-in',
+        "updatedAt": widget.updatedAt
+      }
+    };
+
+    final String schemaJson = const JsonEncoder.withIndent('  ').convert(schemaMap);
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Schema Preview',
+      barrierColor: Colors.black.withValues(alpha: 0.8),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 500,
+              height: 400,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${widget.name.toUpperCase()} CONFIG SCHEMA',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white54),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: SingleChildScrollView(
+                        child: Text(
+                          schemaJson,
+                          style: const TextStyle(
+                            color: Color(0xFF34D399),
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -266,6 +562,7 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
       ref.read(pageTitleProvider.notifier).state = 'WIDGET MANAGEMENT';
       ref.read(pageSubtitleProvider.notifier).state = 'Configure and manage your application widgets';
       ref.read(headerActionsProvider.notifier).state = [];
+      _fetchWidgets();
     });
   }
 
@@ -279,13 +576,31 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
           // Stats Row
           Row(
             children: [
-              _buildStatCard('3', 'Total Widgets', isActive: true),
+              _buildStatCard(
+                _isLoading ? null : '$_totalWidgets', 
+                'Total Widgets', 
+                isActive: true,
+              ),
               const SizedBox(width: 16),
-              _buildStatCard('1', 'Control Widgets'),
+              _buildStatCard(
+                _isLoading ? null : '$_controlWidgets', 
+                'Control Widgets',
+              ),
               const SizedBox(width: 16),
-              _buildStatCard('1', 'Input Widgets'),
+              _buildStatCard(
+                _isLoading ? null : '$_inputWidgets', 
+                'Input Widgets',
+              ),
               const SizedBox(width: 16),
-              _buildStatCard('0', 'Layout Widgets'),
+              _buildStatCard(
+                _isLoading ? null : '$_displayWidgets', 
+                'Display Widgets',
+              ),
+              const SizedBox(width: 16),
+              _buildStatCard(
+                _isLoading ? null : '$_layoutWidgets', 
+                'Layout Widgets',
+              ),
             ],
           ),
           const SizedBox(height: 32),
@@ -325,28 +640,47 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
                 const SizedBox(height: 24),
 
                 // Widgets List
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _widgets.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    return _WidgetListItem(
-                      data: _widgets[index],
-                      onToggle: () {
-                        setState(() {
-                          final widget = _widgets[index];
-                          widget.status = widget.status == 'Active' ? 'Inactive' : 'Active';
-                        });
-                      },
-                      onEdit: () => _showEditWidgetDialog(index),
-                      onDelete: () => _deleteWidget(index),
-                      onDuplicate: () => _duplicateWidget(index),
-                      onViewCode: () => _showCodeDialog(index),
-                      onViewProperties: () => _showPropertiesDialog(index),
-                    );
-                  },
-                ),
+                _isLoading
+                    ? ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 3,
+                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) => const _WidgetSkeletonItem(),
+                      )
+                    : _widgets.isEmpty
+                        ? Container(
+                            height: 200,
+                            alignment: Alignment.center,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.widgets_outlined, color: Colors.white.withValues(alpha: 0.2), size: 48),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No widgets configured yet.',
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _widgets.length,
+                            separatorBuilder: (context, index) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              return _WidgetListItem(
+                                data: _widgets[index],
+                                onToggle: () {},
+                                onEdit: () => _showEditWidgetDialog(index),
+                                onDelete: () => _deleteWidget(index),
+                                onDuplicate: () => _duplicateWidget(index),
+                                onViewCode: () => _showCodeDialog(index),
+                                onViewProperties: () => _showPropertiesDialog(index),
+                              );
+                            },
+                          ),
               ],
             ),
           ),
@@ -355,50 +689,8 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
     );
   }
 
-  Widget _buildStatCard(String value, String label, {bool isActive = false}) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.05),
-            width: isActive ? 1.5 : 1.0,
-          ),
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Widget _buildStatCard(String? value, String label, {bool isActive = false}) {
+    return _StatCard(value: value, label: label, isActive: isActive);
   }
 }
 
@@ -483,24 +775,112 @@ class _HeaderButtonState extends State<_HeaderButton> {
   }
 }
 
+class _WidgetSkeletonItem extends StatelessWidget {
+  const _WidgetSkeletonItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.05),
+          width: 0.5,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: const Row(
+        children: [
+          SkeletonLoader(width: 48, height: 48, borderRadius: BorderRadius.all(Radius.circular(8))),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonLoader(width: 140, height: 16),
+                SizedBox(height: 6),
+                SkeletonLoader(width: 280, height: 12),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    SkeletonLoader(width: 60, height: 18, borderRadius: BorderRadius.all(Radius.circular(4))),
+                    SizedBox(width: 12),
+                    SkeletonLoader(width: 80, height: 12),
+                    SizedBox(width: 12),
+                    SkeletonLoader(width: 80, height: 12),
+                    SizedBox(width: 12),
+                    SkeletonLoader(width: 110, height: 12),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _WidgetData {
+  final int? id;
+  final String key;
   final String name;
   final String category;
   final String description;
+  final List<dynamic> propertiesList;
+  final List<dynamic> functionsList;
+  final String renderCode;
   final int properties;
   final int functions;
   final String updatedAt;
   String status;
 
   _WidgetData({
+    this.id,
+    required this.key,
     required this.name,
     required this.category,
     required this.description,
+    required this.propertiesList,
+    required this.functionsList,
+    required this.renderCode,
     required this.properties,
     required this.functions,
     required this.updatedAt,
     required this.status,
   });
+
+  static _WidgetData fromJson(Map<String, dynamic> json) {
+    final configSchema = json['config_schema'] ?? {};
+    final String description = configSchema['description'] ?? 'A custom widget component.';
+    final List<dynamic> propertiesList = configSchema['properties'] as List<dynamic>? ?? [];
+    final List<dynamic> functionsList = configSchema['functions'] as List<dynamic>? ?? [];
+    final String renderCode = configSchema['renderCode'] ?? '';
+
+    String formattedDate = 'Recent';
+    if (json['updated_at'] != null) {
+      try {
+        final parsed = DateTime.parse(json['updated_at']);
+        formattedDate = '${parsed.year}-${parsed.month.toString().padLeft(2, '0')}-${parsed.day.toString().padLeft(2, '0')}';
+      } catch (_) {}
+    }
+
+    return _WidgetData(
+      id: json['id'],
+      key: json['key'] ?? '',
+      name: json['label'] ?? '',
+      category: json['category'] ?? '',
+      description: description,
+      propertiesList: propertiesList,
+      functionsList: functionsList,
+      renderCode: renderCode,
+      properties: propertiesList.length,
+      functions: functionsList.length,
+      updatedAt: formattedDate,
+      status: json['is_builtin'] == true ? 'Built-in' : 'Custom',
+    );
+  }
 }
 
 class _WidgetListItem extends StatefulWidget {
@@ -649,6 +1029,9 @@ class _WidgetListItemState extends State<_WidgetListItem> {
   }
 
   Widget _buildCategoryBadge(String label) {
+    final displayLabel = label.isEmpty 
+        ? '' 
+        : '${label[0].toUpperCase()}${label.substring(1).toLowerCase()}';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -656,7 +1039,7 @@ class _WidgetListItemState extends State<_WidgetListItem> {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        label,
+        displayLabel,
         style: TextStyle(
           color: Colors.white.withValues(alpha: 0.6),
           fontSize: 11,
@@ -713,6 +1096,89 @@ class _ActionButtonState extends State<_ActionButton> {
             colorFilter: ColorFilter.mode(
               (widget.color ?? Colors.white).withValues(alpha: _isHovered ? 1.0 : 0.4),
               BlendMode.srcIn,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatefulWidget {
+  final String? value;
+  final String label;
+  final bool isActive;
+
+  const _StatCard({
+    required this.value,
+    required this.label,
+    this.isActive = false,
+  });
+
+  @override
+  State<_StatCard> createState() => _StatCardState();
+}
+
+class _StatCardState extends State<_StatCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final showGlow = widget.isActive || _isHovered;
+    return Expanded(
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: AnimatedScale(
+          scale: _isHovered ? 1.04 : 1.0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: _isHovered ? 0.06 : 0.03),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: showGlow ? Colors.white.withValues(alpha: widget.isActive ? 0.8 : 0.4) : Colors.white.withValues(alpha: 0.05),
+                width: widget.isActive ? 1.5 : (showGlow ? 1.2 : 1.0),
+              ),
+              boxShadow: showGlow
+                  ? [
+                      BoxShadow(
+                        color: Colors.white.withValues(alpha: widget.isActive ? 0.05 : 0.02),
+                        blurRadius: 15,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                widget.value == null
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 6),
+                        child: SkeletonLoader(width: 50, height: 28),
+                      )
+                    : Text(
+                        widget.value!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.label,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

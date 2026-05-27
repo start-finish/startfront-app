@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:developer' as developer;
 import '../../core/constants/theme.dart';
 import '../../core/components/glass_card.dart';
 import '../../core/providers/layout_provider.dart';
 import '../../core/components/confirm_dialog.dart';
 import '../../core/components/app_notification.dart';
+import '../../core/services/base_service.dart';
 import 'components/user_dialog.dart';
+import '../../core/components/skeleton_loader.dart';
 
 class UsersPage extends ConsumerStatefulWidget {
   const UsersPage({super.key});
@@ -19,19 +22,74 @@ class _UsersPageState extends ConsumerState<UsersPage> {
   late final TextEditingController _searchController;
   String _searchQuery = '';
   late List<_UserData> _users;
+  bool _isLoading = true;
+  int _totalCount = 0;
+  int _activeCount = 0;
+  int _newTodayCount = 0;
+  int _pendingCount = 0;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _users = _getInitialUsers();
+    _users = [];
     Future.microtask(() {
       if (!mounted) return;
       ref.read(pageTitleProvider.notifier).state = 'USER MANAGEMENT';
       ref.read(pageSubtitleProvider.notifier).state = 'Manage your platform users and their access levels';
       ref.read(headerActionsProvider.notifier).state = [];
+      _loadUsers();
     });
     _searchController.addListener(_onSearchChanged);
+  }
+
+  void _loadUsers() async {
+    setState(() => _isLoading = true);
+    try {
+      final baseService = ref.read(baseServiceProvider);
+      final data = await baseService.listUsers(
+        page: 1,
+        limit: 100,
+      );
+      if (data != null && data is List) {
+        setState(() {
+          _users = data.map<_UserData>((u) {
+            final id = u['id'] as int?;
+            final username = u['username'] as String? ?? '';
+            final email = u['email'] as String? ?? '';
+            final role = u['role'] as String? ?? 'Viewer';
+            final description = u['description'] as String? ?? '';
+            final status = u['status'] as String? ?? 'Active';
+            final initials = username.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+            return _UserData(
+              id: id,
+              name: username,
+              email: email,
+              role: role,
+              description: description,
+              status: status,
+              initials: initials,
+              color: Colors.blueAccent,
+            );
+          }).toList();
+        });
+      }
+
+      // Load counts
+      final countRes = await baseService.getUsersCount();
+      if (countRes != null && countRes is Map) {
+        setState(() {
+          _totalCount = (countRes['total'] as num?)?.toInt() ?? 0;
+          _activeCount = (countRes['active'] as num?)?.toInt() ?? 0;
+          _newTodayCount = (countRes['new_today'] as num?)?.toInt() ?? 0;
+          _pendingCount = (countRes['pending'] as num?)?.toInt() ?? 0;
+        });
+      }
+    } catch (e) {
+      developer.log('Error loading users: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _showAddUserDialog() async {
@@ -69,26 +127,30 @@ class _UsersPageState extends ConsumerState<UsersPage> {
       );
 
       if (confirmed == true && mounted) {
-        setState(() {
-          final initials = result['name']!.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
-
-          _users.add(
-            _UserData(
-              name: result['name']!,
-              email: result['email']!,
-              role: result['role']!,
-              description: result['description']!,
-              status: 'Active',
-              initials: initials,
-              color: Colors.blueAccent,
-            ),
+        try {
+          final baseService = ref.read(baseServiceProvider);
+          await baseService.createUser(
+            username: result['name']!,
+            email: result['email']!,
+            password: 'UserPassword123!',
+            status: 'Active',
+            role: result['role']!,
+            description: result['description']!,
           );
-        });
-        AppNotification.show(
-          context,
-          title: 'User Added',
-          message: 'New member "${result['name']}" has been registered.',
-        );
+          _loadUsers();
+          AppNotification.show(
+            context,
+            title: 'User Added',
+            message: 'New member "${result['name']}" has been registered.',
+          );
+        } catch (e) {
+          AppNotification.show(
+            context,
+            title: 'Error Adding User',
+            message: e.toString().replaceAll('Exception:', ''),
+            type: NotificationType.error,
+          );
+        }
       }
     }
   }
@@ -136,24 +198,29 @@ class _UsersPageState extends ConsumerState<UsersPage> {
       );
 
       if (confirmed == true && mounted) {
-        setState(() {
-          final initials = result['name']!.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
-
-          _users[index] = _UserData(
-            name: result['name']!,
+        try {
+          final baseService = ref.read(baseServiceProvider);
+          await baseService.updateUser(
+            id: user.id!,
+            username: result['name']!,
             email: result['email']!,
             role: result['role']!,
             description: result['description']!,
-            status: user.status,
-            initials: initials,
-            color: user.color,
           );
-        });
-        AppNotification.show(
-          context,
-          title: 'User Updated',
-          message: 'Profile for "${result['name']}" has been updated.',
-        );
+          _loadUsers();
+          AppNotification.show(
+            context,
+            title: 'User Updated',
+            message: 'Profile for "${result['name']}" has been updated.',
+          );
+        } catch (e) {
+          AppNotification.show(
+            context,
+            title: 'Error Updating User',
+            message: e.toString().replaceAll('Exception:', ''),
+            type: NotificationType.error,
+          );
+        }
       }
     }
   }
@@ -179,15 +246,24 @@ class _UsersPageState extends ConsumerState<UsersPage> {
     );
 
     if (confirmed == true && mounted) {
-      setState(() {
-        _users.removeAt(index);
-      });
-      AppNotification.show(
-        context,
-        title: 'User Deleted',
-        message: 'Account for "${user.name}" has been removed.',
-        type: NotificationType.error,
-      );
+      try {
+        final baseService = ref.read(baseServiceProvider);
+        await baseService.deleteUser(user.id!);
+        _loadUsers();
+        AppNotification.show(
+          context,
+          title: 'User Deleted',
+          message: 'Account for "${user.name}" has been removed.',
+          type: NotificationType.error,
+        );
+      } catch (e) {
+        AppNotification.show(
+          context,
+          title: 'Error Deleting User',
+          message: e.toString().replaceAll('Exception:', ''),
+          type: NotificationType.error,
+        );
+      }
     }
   }
 
@@ -233,7 +309,52 @@ class _UsersPageState extends ConsumerState<UsersPage> {
           const SizedBox(height: 24),
 
           // Users List (Card Style)
-          if (filteredUsers.isEmpty)
+          if (_isLoading)
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 4,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) => GlassCard(
+                padding: const EdgeInsets.all(20),
+                borderRadius: 20,
+                backgroundOpacity: 0.04,
+                borderOpacity: 0.08,
+                child: Row(
+                  children: [
+                    const SkeletonLoader(
+                      width: 52,
+                      height: 52,
+                      borderRadius: BorderRadius.all(Radius.circular(15)),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SkeletonLoader(width: 140, height: 16),
+                          const SizedBox(height: 8),
+                          const SkeletonLoader(width: 200, height: 12),
+                          if (!isMobile) ...[
+                            const SizedBox(height: 8),
+                            const SkeletonLoader(width: 320, height: 10),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    if (!isMobile) ...[
+                      const SkeletonLoader(width: 80, height: 24),
+                      const SizedBox(width: 24),
+                      const SkeletonLoader(width: 60, height: 24),
+                      const SizedBox(width: 24),
+                    ],
+                    const SkeletonLoader(width: 32, height: 32, borderRadius: BorderRadius.all(Radius.circular(8))),
+                  ],
+                ),
+              ),
+            )
+          else if (filteredUsers.isEmpty)
             _buildEmptyState()
           else
             ListView.separated(
@@ -246,27 +367,31 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                 isMobile: isMobile,
                 onEdit: () => _showEditUserDialog(_users.indexOf(filteredUsers[index])),
                 onDelete: () => _deleteUser(_users.indexOf(filteredUsers[index])),
-                onToggleStatus: () {
-                  setState(() {
-                    final actualIndex = _users.indexOf(filteredUsers[index]);
-                    final user = _users[actualIndex];
-                    final newStatus = user.status == 'Active' ? 'Inactive' : 'Active';
-                    _users[actualIndex] = _UserData(
-                      name: user.name,
-                      email: user.email,
-                      role: user.role,
+                onToggleStatus: () async {
+                  final user = filteredUsers[index];
+                  final isActive = user.status.toLowerCase() == 'active';
+                  final newStatus = isActive ? 'Inactive' : 'Active';
+                  try {
+                    final baseService = ref.read(baseServiceProvider);
+                    await baseService.updateUser(
+                      id: user.id!,
                       status: newStatus,
-                      initials: user.initials,
-                      color: user.color,
-                      description: user.description,
                     );
-                  });
-                  AppNotification.show(
-                    context,
-                    title: 'Status Updated',
-                    message: '"${filteredUsers[index].name}" is now ${filteredUsers[index].status}.',
-                    type: NotificationType.info,
-                  );
+                    _loadUsers();
+                    AppNotification.show(
+                      context,
+                      title: 'Status Updated',
+                      message: '"${user.name}" is now $newStatus.',
+                      type: NotificationType.info,
+                    );
+                  } catch (e) {
+                    AppNotification.show(
+                      context,
+                      title: 'Error Updating Status',
+                      message: e.toString().replaceAll('Exception:', ''),
+                      type: NotificationType.error,
+                    );
+                  }
                 },
               ),
             ),
@@ -289,10 +414,10 @@ class _UsersPageState extends ConsumerState<UsersPage> {
           mainAxisSpacing: 16,
           childAspectRatio: isMobile ? 1.4 : 2.8,
           children: [
-            _buildStatCard('128', 'Total Users', Icons.group_rounded, const Color(0xFF6366F1)),
-            _buildStatCard('94', 'Active Now', Icons.bolt_rounded, const Color(0xFF10B981)),
-            _buildStatCard('12', 'New Today', Icons.person_add_rounded, const Color(0xFFF59E0B)),
-            _buildStatCard('4', 'Pending', Icons.hourglass_empty_rounded, const Color(0xFFEF4444)),
+            _buildStatCard('$_totalCount', 'Total Users', Icons.group_rounded, const Color(0xFF6366F1)),
+            _buildStatCard('$_activeCount', 'Active Now', Icons.bolt_rounded, const Color(0xFF10B981)),
+            _buildStatCard('$_newTodayCount', 'New Today', Icons.person_add_rounded, const Color(0xFFF59E0B)),
+            _buildStatCard('$_pendingCount', 'Pending', Icons.hourglass_empty_rounded, const Color(0xFFEF4444)),
           ],
         );
       },
@@ -323,14 +448,20 @@ class _UsersPageState extends ConsumerState<UsersPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                _isLoading
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 4),
+                        child: SkeletonLoader(width: 40, height: 16),
+                      )
+                    : Text(
+                        value,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                const SizedBox(height: 2),
                 Text(
                   label,
                   style: TextStyle(
@@ -432,56 +563,6 @@ class _UsersPageState extends ConsumerState<UsersPage> {
       ),
     );
   }
-
-  List<_UserData> _getInitialUsers() {
-    return [
-      _UserData(
-        name: 'Alex Johnson',
-        email: 'alex@startfront.io',
-        role: 'Super Admin',
-        status: 'Active',
-        initials: 'AJ',
-        color: const Color(0xFF6366F1),
-        description: 'Full access to all platform features and settings.',
-      ),
-      _UserData(
-        name: 'Sarah Chen',
-        email: 'sarah@startfront.io',
-        role: 'Admin',
-        status: 'Active',
-        initials: 'SC',
-        color: const Color(0xFF10B981),
-        description: 'Administrative access with some system restrictions.',
-      ),
-      _UserData(
-        name: 'Mike Torres',
-        email: 'mike@startfront.io',
-        role: 'Viewer',
-        status: 'Inactive',
-        initials: 'MT',
-        color: const Color(0xFFF59E0B),
-        description: 'Read-only access to dashboard and reporting tools.',
-      ),
-      _UserData(
-        name: 'Lisa Wang',
-        email: 'lisa@startfront.io',
-        role: 'Editor',
-        status: 'Active',
-        initials: 'LW',
-        color: const Color(0xFFEC4899),
-        description: 'Can create, edit and manage platform content.',
-      ),
-      _UserData(
-        name: 'James Park',
-        email: 'james@startfront.io',
-        role: 'Viewer',
-        status: 'Active',
-        initials: 'JP',
-        color: const Color(0xFF8B5CF6),
-        description: 'Read-only access to dashboard and reporting tools.',
-      ),
-    ];
-  }
 }
 
 class _PrimaryActionButton extends StatefulWidget {
@@ -555,6 +636,7 @@ class _PrimaryActionButtonState extends State<_PrimaryActionButton> {
 }
 
 class _UserData {
+  final int? id;
   final String name;
   final String email;
   final String role;
@@ -564,6 +646,7 @@ class _UserData {
   final String description;
 
   _UserData({
+    this.id,
     required this.name,
     required this.email,
     required this.role,
@@ -598,7 +681,7 @@ class _UserListItemState extends State<_UserListItem> {
 
   @override
   Widget build(BuildContext context) {
-    final isActive = widget.user.status == 'Active';
+    final isActive = widget.user.status.toLowerCase() == 'active';
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),

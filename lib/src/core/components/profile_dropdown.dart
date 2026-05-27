@@ -17,7 +17,7 @@ class ProfileDropdown extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
-    final email = auth.email ?? 'admin@startfront.com';
+    final email = auth.email ?? 'admin';
 
     // Extract formatted name from email (e.g. admin@startfront.com -> ADMIN)
     final rawName = email.split('@').first;

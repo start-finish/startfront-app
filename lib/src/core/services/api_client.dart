@@ -9,8 +9,8 @@ class ApiClient {
   final bool _enableLogging;
 
   ApiClient({required String baseUrl, required bool enableLogging})
-      : _baseUrl = baseUrl,
-        _enableLogging = enableLogging;
+    : _baseUrl = baseUrl,
+      _enableLogging = enableLogging;
 
   /// Performs a POST request to `/api/startProcess` with the given [msgId] and [data].
   Future<dynamic> post(String msgId, Map<String, dynamic> data) async {
@@ -19,9 +19,11 @@ class ApiClient {
       'msgId': msgId,
       'data': data,
     };
+    const encoder = JsonEncoder.withIndent('  ');
 
     if (_enableLogging) {
-      developer.log('API Request -> $msgId to $url\nPayload: ${jsonEncode(payload)}');
+      final prettyPayload = encoder.convert(payload);
+      developer.log('API Request -> $msgId to $url\nPayload:\n$prettyPayload');
     }
 
     try {
@@ -35,7 +37,12 @@ class ApiClient {
       );
 
       if (_enableLogging) {
-        developer.log('API Response -> $msgId\nStatus: ${response.statusCode}\nBody: ${response.body}');
+        String prettyBody = response.body;
+        try {
+          final decoded = jsonDecode(response.body);
+          prettyBody = encoder.convert(decoded);
+        } catch (_) {}
+        developer.log('API Response -> $msgId\nStatus: ${response.statusCode}\nBody:\n$prettyBody');
       }
 
       if (response.statusCode >= 400) {
@@ -48,7 +55,7 @@ class ApiClient {
       }
 
       final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
-      
+
       // Check response structure for success or error keys
       if (responseBody['status'] == 'error' || responseBody['code'] != '0') {
         throw Exception(responseBody['error'] ?? 'API transaction failed');

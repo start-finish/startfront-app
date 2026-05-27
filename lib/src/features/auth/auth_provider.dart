@@ -1,4 +1,6 @@
+import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/services/base_service.dart';
 
 class AuthState {
   final bool isAuthenticated;
@@ -25,17 +27,23 @@ class AuthState {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(AuthState());
+  final Ref _ref;
+
+  AuthNotifier(this._ref) : super(AuthState());
 
   Future<bool> login(String email, String password) async {
     state = state.copyWith(isLoading: true);
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final baseService = _ref.read(baseServiceProvider);
+      final response = await baseService.login(email, password);
 
-    if (email.isNotEmpty) {
-      state = AuthState(isAuthenticated: true, email: email);
-      return true;
+      if (response != null) {
+        state = AuthState(isAuthenticated: true, email: email);
+        return true;
+      }
+    } catch (e) {
+      developer.log('Login error: $e');
     }
 
     state = state.copyWith(isLoading: false);
@@ -45,12 +53,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> signup(String name, String email, String password) async {
     state = state.copyWith(isLoading: true);
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final baseService = _ref.read(baseServiceProvider);
+      final response = await baseService.signUp(
+        username: name,
+        email: email,
+        password: password,
+      );
 
-    if (email.isNotEmpty) {
-      state = AuthState(isAuthenticated: true, email: email);
-      return true;
+      if (response != null) {
+        state = AuthState(isAuthenticated: true, email: email);
+        return true;
+      }
+    } catch (e) {
+      developer.log('Signup error: $e');
     }
 
     state = state.copyWith(isLoading: false);
@@ -63,5 +79,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
+  return AuthNotifier(ref);
 });

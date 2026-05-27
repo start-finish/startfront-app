@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:convert';
+import 'dart:developer' as developer;
 import '../../core/components/glass_card.dart';
 import '../../core/providers/layout_provider.dart';
 import '../../core/components/confirm_dialog.dart';
 import '../../core/components/app_notification.dart';
+import '../../core/services/base_service.dart';
 import 'components/role_dialog.dart';
+import '../../core/components/skeleton_loader.dart';
 import '../../core/constants/theme.dart';
 
 class RolePermissionPage extends ConsumerStatefulWidget {
@@ -17,17 +21,56 @@ class RolePermissionPage extends ConsumerStatefulWidget {
 
 class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
   late List<_RoleData> _roles;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _roles = _getInitialRoles();
+    _roles = [];
     Future.microtask(() {
       if (!mounted) return;
       ref.read(pageTitleProvider.notifier).state = 'ROLES & PERMISSIONS';
       ref.read(pageSubtitleProvider.notifier).state = 'Manage user roles and their associated permissions';
       ref.read(headerActionsProvider.notifier).state = [];
+      _loadRoles();
     });
+  }
+
+  void _loadRoles() async {
+    setState(() => _isLoading = true);
+    try {
+      final baseService = ref.read(baseServiceProvider);
+      final data = await baseService.listRoles(
+        page: 1,
+        limit: 100,
+      );
+      if (data != null && data is List) {
+        setState(() {
+          _roles = data.map<_RoleData>((r) {
+            final id = r['id'] as int?;
+            final roleName = r['role_name'] as String? ?? '';
+            final description = r['description'] as String? ?? '';
+            final userCount = r['user_count'] as int? ?? 0;
+            List<String> permissions = [];
+            try {
+              final rawPerms = r['permissions'] as String? ?? '[]';
+              permissions = List<String>.from(jsonDecode(rawPerms));
+            } catch (_) {}
+            return _RoleData(
+              id: id,
+              name: roleName,
+              description: description,
+              userCount: userCount,
+              permissions: permissions,
+            );
+          }).toList();
+        });
+      }
+    } catch (e) {
+      developer.log('Error loading roles: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _showCreateRoleDialog() async {
@@ -65,21 +108,27 @@ class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
       );
 
       if (confirmed == true && mounted) {
-        setState(() {
-          _roles.add(
-            _RoleData(
-              name: result['name']!,
-              description: result['description']!,
-              userCount: 0,
-              permissions: List<String>.from(result['permissions']),
-            ),
+        try {
+          final baseService = ref.read(baseServiceProvider);
+          await baseService.createRole(
+            roleName: result['name']!,
+            description: result['description']!,
+            permissions: jsonEncode(result['permissions']),
           );
-        });
-        AppNotification.show(
-          context,
-          title: 'Role Created',
-          message: 'The role "${result['name']}" has been added successfully.',
-        );
+          _loadRoles();
+          AppNotification.show(
+            context,
+            title: 'Role Created',
+            message: 'The role "${result['name']}" has been added successfully.',
+          );
+        } catch (e) {
+          AppNotification.show(
+            context,
+            title: 'Error Creating Role',
+            message: e.toString().replaceAll('Exception:', ''),
+            type: NotificationType.error,
+          );
+        }
       }
     }
   }
@@ -126,19 +175,28 @@ class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
       );
 
       if (confirmed == true && mounted) {
-        setState(() {
-          _roles[index] = _RoleData(
-            name: result['name']!,
+        try {
+          final baseService = ref.read(baseServiceProvider);
+          await baseService.updateRole(
+            id: role.id!,
+            roleName: result['name']!,
             description: result['description']!,
-            userCount: role.userCount,
-            permissions: List<String>.from(result['permissions']),
+            permissions: jsonEncode(result['permissions']),
           );
-        });
-        AppNotification.show(
-          context,
-          title: 'Role Updated',
-          message: 'The role "${result['name']}" has been modified.',
-        );
+          _loadRoles();
+          AppNotification.show(
+            context,
+            title: 'Role Updated',
+            message: 'The role "${result['name']}" has been modified.',
+          );
+        } catch (e) {
+          AppNotification.show(
+            context,
+            title: 'Error Updating Role',
+            message: e.toString().replaceAll('Exception:', ''),
+            type: NotificationType.error,
+          );
+        }
       }
     }
   }
@@ -165,15 +223,24 @@ class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
     );
 
     if (confirmed == true && mounted) {
-      setState(() {
-        _roles.removeAt(index);
-      });
-      AppNotification.show(
-        context,
-        title: 'Role Deleted',
-        message: 'The role "${role.name}" has been removed.',
-        type: NotificationType.error,
-      );
+      try {
+        final baseService = ref.read(baseServiceProvider);
+        await baseService.deleteRole(role.id!);
+        _loadRoles();
+        AppNotification.show(
+          context,
+          title: 'Role Deleted',
+          message: 'The role "${role.name}" has been removed.',
+          type: NotificationType.error,
+        );
+      } catch (e) {
+        AppNotification.show(
+          context,
+          title: 'Error Deleting Role',
+          message: e.toString().replaceAll('Exception:', ''),
+          type: NotificationType.error,
+        );
+      }
     }
   }
 
@@ -247,14 +314,19 @@ class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          _isLoading
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                  child: SkeletonLoader(width: 50, height: 28),
+                )
+              : Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
           const SizedBox(height: 4),
           Text(
             label,
@@ -316,6 +388,56 @@ class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
   }
 
   Widget _buildRoleList() {
+    if (_isLoading) {
+      return ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 4,
+        separatorBuilder: (context, index) => const SizedBox(height: 16),
+        itemBuilder: (context, index) => Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Row(
+            children: [
+              const SkeletonLoader(
+                width: 42,
+                height: 42,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+              const SizedBox(width: 20),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonLoader(width: 120, height: 16),
+                    SizedBox(height: 8),
+                    SkeletonLoader(width: 280, height: 12),
+                    SizedBox(height: 8),
+                    SkeletonLoader(width: 80, height: 10),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 24),
+              if (MediaQuery.of(context).size.width > 600) ...[
+                const SkeletonLoader(width: 60, height: 20),
+                const SizedBox(width: 8),
+                const SkeletonLoader(width: 60, height: 20),
+                const SizedBox(width: 8),
+                const SkeletonLoader(width: 60, height: 20),
+              ],
+              const SizedBox(width: 24),
+              const SkeletonLoader(width: 68, height: 28),
+            ],
+          ),
+        ),
+      );
+    }
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -328,44 +450,17 @@ class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
       ),
     );
   }
-
-  List<_RoleData> _getInitialRoles() {
-    return [
-      _RoleData(
-        name: 'Super Admin',
-        description: 'Full access to all platform features',
-        userCount: 2,
-        permissions: ['read', 'write', 'delete', 'admin'],
-      ),
-      _RoleData(
-        name: 'Admin',
-        description: 'Administrative access with some restrictions',
-        userCount: 5,
-        permissions: ['read', 'write', 'delete'],
-      ),
-      _RoleData(
-        name: 'Editor',
-        description: 'Can create and edit content',
-        userCount: 12,
-        permissions: ['read', 'write'],
-      ),
-      _RoleData(
-        name: 'Viewer',
-        description: 'Read-only access',
-        userCount: 25,
-        permissions: ['read'],
-      ),
-    ];
-  }
 }
 
 class _RoleData {
+  final int? id;
   final String name;
   final String description;
   final int userCount;
   final List<String> permissions;
 
   _RoleData({
+    this.id,
     required this.name,
     required this.description,
     required this.userCount,
