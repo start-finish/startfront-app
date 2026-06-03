@@ -10,6 +10,7 @@ import '../../core/components/app_notification.dart';
 import '../../core/services/base_service.dart';
 import 'components/user_dialog.dart';
 import '../../core/components/skeleton_loader.dart';
+import '../../core/components/pagination_bar.dart';
 
 class UsersPage extends ConsumerStatefulWidget {
   const UsersPage({super.key});
@@ -27,6 +28,10 @@ class _UsersPageState extends ConsumerState<UsersPage> {
   int _activeCount = 0;
   int _newTodayCount = 0;
   int _pendingCount = 0;
+
+  int _currentPage = 1;
+  final int _pageSize = 10;
+  int _totalPages = 1;
 
   @override
   void initState() {
@@ -47,12 +52,18 @@ class _UsersPageState extends ConsumerState<UsersPage> {
     setState(() => _isLoading = true);
     try {
       final baseService = ref.read(baseServiceProvider);
-      final data = await baseService.listUsers(
-        page: 1,
-        limit: 100,
+      final response = await baseService.listUsersFull(
+        page: _currentPage,
+        limit: _pageSize,
+        search: _searchQuery,
       );
-      if (data != null && data is List) {
+      
+      final data = response['data'] as List<dynamic>? ?? [];
+      final meta = response['meta'] as Map<String, dynamic>? ?? {};
+
+      if (mounted) {
         setState(() {
+          _totalPages = (meta['totalPages'] as num?)?.toInt() ?? 1;
           _users = data.map<_UserData>((u) {
             final id = u['id'] as int?;
             final username = u['username'] as String? ?? '';
@@ -77,7 +88,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
 
       // Load counts
       final countRes = await baseService.getUsersCount();
-      if (countRes != null && countRes is Map) {
+      if (countRes != null && countRes is Map && mounted) {
         setState(() {
           _totalCount = (countRes['total'] as num?)?.toInt() ?? 0;
           _activeCount = (countRes['active'] as num?)?.toInt() ?? 0;
@@ -271,7 +282,9 @@ class _UsersPageState extends ConsumerState<UsersPage> {
     if (!mounted) return;
     setState(() {
       _searchQuery = _searchController.text.toLowerCase();
+      _currentPage = 1;
     });
+    _loadUsers();
   }
 
   @override
@@ -357,43 +370,61 @@ class _UsersPageState extends ConsumerState<UsersPage> {
           else if (filteredUsers.isEmpty)
             _buildEmptyState()
           else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredUsers.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 16),
-              itemBuilder: (context, index) => _UserListItem(
-                user: filteredUsers[index],
-                isMobile: isMobile,
-                onEdit: () => _showEditUserDialog(_users.indexOf(filteredUsers[index])),
-                onDelete: () => _deleteUser(_users.indexOf(filteredUsers[index])),
-                onToggleStatus: () async {
-                  final user = filteredUsers[index];
-                  final isActive = user.status.toLowerCase() == 'active';
-                  final newStatus = isActive ? 'Inactive' : 'Active';
-                  try {
-                    final baseService = ref.read(baseServiceProvider);
-                    await baseService.updateUser(
-                      id: user.id!,
-                      status: newStatus,
-                    );
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: filteredUsers.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) => _UserListItem(
+                    user: filteredUsers[index],
+                    isMobile: isMobile,
+                    onEdit: () => _showEditUserDialog(_users.indexOf(filteredUsers[index])),
+                    onDelete: () => _deleteUser(_users.indexOf(filteredUsers[index])),
+                    onToggleStatus: () async {
+                      final user = filteredUsers[index];
+                      final isActive = user.status.toLowerCase() == 'active';
+                      final newStatus = isActive ? 'Inactive' : 'Active';
+                      try {
+                        final baseService = ref.read(baseServiceProvider);
+                        await baseService.updateUser(
+                          id: user.id!,
+                          status: newStatus,
+                        );
+                        _loadUsers();
+                        AppNotification.show(
+                          context,
+                          title: 'Status Updated',
+                          message: '"${user.name}" is now $newStatus.',
+                          type: NotificationType.info,
+                        );
+                      } catch (e) {
+                        AppNotification.show(
+                          context,
+                          title: 'Error Updating Status',
+                          message: e.toString().replaceAll('Exception:', ''),
+                          type: NotificationType.error,
+                        );
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(height: 24),
+                PaginationBar(
+                  currentPage: _currentPage,
+                  totalPages: _totalPages,
+                  totalItems: _totalCount,
+                  pageSize: _pageSize,
+                  onPageChanged: (page) {
+                    setState(() {
+                      _currentPage = page;
+                    });
                     _loadUsers();
-                    AppNotification.show(
-                      context,
-                      title: 'Status Updated',
-                      message: '"${user.name}" is now $newStatus.',
-                      type: NotificationType.info,
-                    );
-                  } catch (e) {
-                    AppNotification.show(
-                      context,
-                      title: 'Error Updating Status',
-                      message: e.toString().replaceAll('Exception:', ''),
-                      type: NotificationType.error,
-                    );
-                  }
-                },
-              ),
+                  },
+                ),
+              ],
             ),
 
           const SizedBox(height: 40),

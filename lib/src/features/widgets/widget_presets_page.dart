@@ -5,6 +5,7 @@ import '../../core/constants/theme.dart';
 import '../../core/providers/layout_provider.dart';
 import '../../core/components/confirm_dialog.dart';
 import '../../core/components/app_notification.dart';
+import '../../core/components/pagination_bar.dart';
 
 class WidgetPresetsPage extends ConsumerStatefulWidget {
   const WidgetPresetsPage({super.key});
@@ -17,6 +18,9 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
   String _selectedCategory = 'All';
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+
+  int _currentPage = 1;
+  final int _pageSize = 10;
 
   final List<_PresetData> _presets = [
     _PresetData(
@@ -51,6 +55,94 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
       usageCount: 12,
       lastUsed: '5 days ago',
     ),
+    _PresetData(
+      name: 'Registration Grid',
+      description: 'Sign up layout with multiple input boxes',
+      category: 'Forms',
+      widgets: ['Column', 'TextField', 'TextField', 'TextField', 'Checkbox', 'ElevatedButton'],
+      usageCount: 7,
+      lastUsed: '10 mins ago',
+    ),
+    _PresetData(
+      name: 'Pricing Card',
+      description: 'Feature listing with bold price tag and CTA',
+      category: 'Content',
+      widgets: ['Card', 'Text', 'Text', 'Divider', 'ListView', 'ElevatedButton'],
+      usageCount: 19,
+      lastUsed: '1 day ago',
+    ),
+    _PresetData(
+      name: 'Profile Header',
+      description: 'User avatar, bio details, and follow button',
+      category: 'Layout',
+      widgets: ['Stack', 'CircleAvatar', 'Text', 'Text', 'ElevatedButton'],
+      usageCount: 31,
+      lastUsed: '4 hours ago',
+    ),
+    _PresetData(
+      name: 'Comment Thread',
+      description: 'Indented replies list with avatar and actions',
+      category: 'Content',
+      widgets: ['ListView', 'ListTile', 'Row', 'IconButton'],
+      usageCount: 14,
+      lastUsed: 'Yesterday',
+    ),
+    _PresetData(
+      name: 'Product Details',
+      description: 'Product image, title, price, description and Add to Cart button',
+      category: 'Content',
+      widgets: ['Column', 'Image', 'Text', 'Text', 'RatingBar', 'ElevatedButton'],
+      usageCount: 25,
+      lastUsed: '3 days ago',
+    ),
+    _PresetData(
+      name: 'Checkout Form',
+      description: 'Payment and shipping forms with summaries',
+      category: 'Forms',
+      widgets: ['Column', 'ExpansionTile', 'TextField', 'Dropdown', 'ElevatedButton'],
+      usageCount: 9,
+      lastUsed: '2 days ago',
+    ),
+    _PresetData(
+      name: 'Stats Dashboard',
+      description: 'Interactive analytics metrics card row',
+      category: 'Layout',
+      widgets: ['Row', 'Card', 'Text', 'Icon', 'Card', 'Text', 'Icon'],
+      usageCount: 18,
+      lastUsed: '1 week ago',
+    ),
+    _PresetData(
+      name: 'Alert Banner Stack',
+      description: 'Warning and error toast messages stack',
+      category: 'Navigation',
+      widgets: ['Stack', 'SnackBar', 'SnackBar', 'SnackBar'],
+      usageCount: 11,
+      lastUsed: '5 days ago',
+    ),
+    _PresetData(
+      name: 'Contact Us Form',
+      description: 'Beautiful contact form with subject and message',
+      category: 'Forms',
+      widgets: ['TextField', 'TextField', 'TextField', 'ElevatedButton'],
+      usageCount: 5,
+      lastUsed: '3 weeks ago',
+    ),
+    _PresetData(
+      name: 'Testimonials Slider',
+      description: 'Customer quotes slider with author avatars',
+      category: 'Content',
+      widgets: ['PageView', 'Card', 'Text', 'CircleAvatar', 'Text'],
+      usageCount: 13,
+      lastUsed: '2 days ago',
+    ),
+    _PresetData(
+      name: 'Search Bar Header',
+      description: 'Premium search bar with voice search icon',
+      category: 'Navigation',
+      widgets: ['Row', 'TextField', 'IconButton'],
+      usageCount: 27,
+      lastUsed: '3 hours ago',
+    ),
   ];
 
   @override
@@ -80,8 +172,17 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
     }).toList();
   }
 
-  void _duplicatePreset(int index) async {
-    final preset = _presets[index];
+  List<_PresetData> get _paginatedPresets {
+    final filtered = _filteredPresets;
+    final startIndex = (_currentPage - 1) * _pageSize;
+    if (startIndex >= filtered.length) {
+      return [];
+    }
+    final endIndex = startIndex + _pageSize;
+    return filtered.sublist(startIndex, endIndex > filtered.length ? filtered.length : endIndex);
+  }
+
+  void _duplicatePreset(_PresetData preset) async {
     final confirmed = await showGeneralDialog<bool>(
       context: context,
       barrierDismissible: true,
@@ -110,6 +211,7 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
             lastUsed: 'Just now',
           ),
         );
+        _currentPage = 1;
       });
       AppNotification.show(
         context,
@@ -119,8 +221,7 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
     }
   }
 
-  void _deletePreset(int index) async {
-    final preset = _presets[index];
+  void _deletePreset(_PresetData preset) async {
     final confirmed = await showGeneralDialog<bool>(
       context: context,
       barrierDismissible: true,
@@ -141,7 +242,8 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
 
     if (confirmed == true && mounted) {
       setState(() {
-        _presets.removeAt(index);
+        _presets.remove(preset);
+        _currentPage = 1;
       });
       AppNotification.show(
         context,
@@ -152,8 +254,7 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
     }
   }
 
-  void _usePreset(int index) async {
-    final preset = _presets[index];
+  void _usePreset(_PresetData preset) async {
     final confirmed = await showGeneralDialog<bool>(
       context: context,
       barrierDismissible: true,
@@ -180,8 +281,7 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
     }
   }
 
-  void _viewCode(int index) {
-    final preset = _presets[index];
+  void _viewCode(_PresetData preset) {
     AppNotification.show(
       context,
       title: 'Preset Code',
@@ -192,7 +292,7 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredPresets = _filteredPresets;
+    final paginatedPresets = _paginatedPresets;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 802;
 
@@ -217,10 +317,10 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
                 mainAxisSpacing: 16,
                 childAspectRatio: aspectRatio,
                 children: [
-                  _buildStatCard('3', 'Total Presets', isActive: true),
-                  _buildStatCard('1', 'Total Usage'),
-                  _buildStatCard('1', 'Form Presets'),
-                  _buildStatCard('0', 'Layout Presets'),
+                  _buildStatCard('${_presets.length}', 'Total Presets', isActive: true),
+                  _buildStatCard('${_presets.fold<int>(0, (sum, p) => sum + p.usageCount)}', 'Total Usage'),
+                  _buildStatCard('${_presets.where((p) => p.category == 'Forms').length}', 'Form Presets'),
+                  _buildStatCard('${_presets.where((p) => p.category == 'Layout').length}', 'Layout Presets'),
                 ],
               );
             },
@@ -236,7 +336,7 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
             builder: (context, constraints) {
               final crossAxisCount = constraints.maxWidth > 1200 ? 2 : 1;
 
-              if (filteredPresets.isEmpty) {
+              if (paginatedPresets.isEmpty) {
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 80),
@@ -254,33 +354,51 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
                 );
               }
 
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 24,
-                  mainAxisSpacing: 24,
-                  mainAxisExtent: isMobile ? 280 : 260,
-                ),
-                itemCount: filteredPresets.length,
-                itemBuilder: (context, index) {
-                  return _PresetCard(
-                    preset: filteredPresets[index],
-                    onDuplicate: () => _duplicatePreset(index),
-                    onDelete: () => _deletePreset(index),
-                    onUse: () => _usePreset(index),
-                    onViewCode: () => _viewCode(index),
-                    onEdit: () {
-                      AppNotification.show(
-                        context,
-                        title: 'Edit Mode',
-                        message: 'Opening preset editor for "${filteredPresets[index].name}"...',
-                        type: NotificationType.info,
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 24,
+                      mainAxisSpacing: 24,
+                      mainAxisExtent: isMobile ? 280 : 260,
+                    ),
+                    itemCount: paginatedPresets.length,
+                    itemBuilder: (context, index) {
+                      final preset = paginatedPresets[index];
+                      return _PresetCard(
+                        preset: preset,
+                        onDuplicate: () => _duplicatePreset(preset),
+                        onDelete: () => _deletePreset(preset),
+                        onUse: () => _usePreset(preset),
+                        onViewCode: () => _viewCode(preset),
+                        onEdit: () {
+                          AppNotification.show(
+                            context,
+                            title: 'Edit Mode',
+                            message: 'Opening preset editor for "${preset.name}"...',
+                            type: NotificationType.info,
+                          );
+                        },
                       );
                     },
-                  );
-                },
+                  ),
+                  const SizedBox(height: 32),
+                  PaginationBar(
+                    currentPage: _currentPage,
+                    totalPages: (_filteredPresets.length / _pageSize).ceil(),
+                    totalItems: _filteredPresets.length,
+                    pageSize: _pageSize,
+                    onPageChanged: (page) {
+                      setState(() {
+                        _currentPage = page;
+                      });
+                    },
+                  ),
+                ],
               );
             },
           ),
@@ -326,7 +444,10 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
                     child: _CategoryChip(
                       label: cat,
                       isSelected: _selectedCategory == cat,
-                      onTap: () => setState(() => _selectedCategory = cat),
+                      onTap: () => setState(() {
+                        _selectedCategory = cat;
+                        _currentPage = 1;
+                      }),
                     ),
                   ),
                 ),
@@ -351,16 +472,19 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    onChanged: (val) => setState(() => _searchQuery = val),
+                    onChanged: (val) => setState(() {
+                      _searchQuery = val;
+                      _currentPage = 1;
+                    }),
                     style: const TextStyle(color: Colors.white, fontSize: 13),
                     textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
-                      hintText: 'Search presets...',
-                      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-                      border: InputBorder.none,
-                      isCollapsed: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                      suffixIcon: _searchQuery.isNotEmpty ? _buildClearButton() : null,
+                       hintText: 'Search presets...',
+                       hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                       border: InputBorder.none,
+                       isCollapsed: true,
+                       contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                       suffixIcon: _searchQuery.isNotEmpty ? _buildClearButton() : null,
                     ),
                   ),
                 ),
@@ -383,7 +507,10 @@ class _WidgetPresetsPageState extends ConsumerState<WidgetPresetsPage> {
           child: GestureDetector(
             onTap: () {
               _searchController.clear();
-              this.setState(() => _searchQuery = '');
+              this.setState(() {
+                _searchQuery = '';
+                _currentPage = 1;
+              });
             },
             child: AnimatedScale(
               scale: isHovered ? 1.2 : 1.0,

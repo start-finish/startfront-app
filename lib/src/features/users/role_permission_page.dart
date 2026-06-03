@@ -11,6 +11,7 @@ import '../../core/services/base_service.dart';
 import 'components/role_dialog.dart';
 import '../../core/components/skeleton_loader.dart';
 import '../../core/constants/theme.dart';
+import '../../core/components/pagination_bar.dart';
 
 class RolePermissionPage extends ConsumerStatefulWidget {
   const RolePermissionPage({super.key});
@@ -22,6 +23,11 @@ class RolePermissionPage extends ConsumerStatefulWidget {
 class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
   late List<_RoleData> _roles;
   bool _isLoading = true;
+
+  int _currentPage = 1;
+  final int _pageSize = 10;
+  int _totalPages = 1;
+  int _totalRoles = 0;
 
   @override
   void initState() {
@@ -40,12 +46,18 @@ class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
     setState(() => _isLoading = true);
     try {
       final baseService = ref.read(baseServiceProvider);
-      final data = await baseService.listRoles(
-        page: 1,
-        limit: 100,
+      final response = await baseService.listRolesFull(
+        page: _currentPage,
+        limit: _pageSize,
       );
-      if (data != null && data is List) {
+      
+      final data = response['data'] as List<dynamic>? ?? [];
+      final meta = response['meta'] as Map<String, dynamic>? ?? {};
+
+      if (mounted) {
         setState(() {
+          _totalPages = (meta['totalPages'] as num?)?.toInt() ?? 1;
+          _totalRoles = (meta['total'] as num?)?.toInt() ?? data.length;
           _roles = data.map<_RoleData>((r) {
             final id = r['id'] as int?;
             final roleName = r['role_name'] as String? ?? '';
@@ -69,7 +81,9 @@ class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
     } catch (e) {
       developer.log('Error loading roles: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -438,16 +452,34 @@ class _RolePermissionPageState extends ConsumerState<RolePermissionPage> {
         ),
       );
     }
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _roles.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) => _RoleItemCard(
-        role: _roles[index],
-        onEdit: () => _showEditRoleDialog(index),
-        onDelete: () => _deleteRole(index),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _roles.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
+          itemBuilder: (context, index) => _RoleItemCard(
+            role: _roles[index],
+            onEdit: () => _showEditRoleDialog(index),
+            onDelete: () => _deleteRole(index),
+          ),
+        ),
+        const SizedBox(height: 24),
+        PaginationBar(
+          currentPage: _currentPage,
+          totalPages: _totalPages,
+          totalItems: _totalRoles,
+          pageSize: _pageSize,
+          onPageChanged: (page) {
+            setState(() {
+              _currentPage = page;
+            });
+            _loadRoles();
+          },
+        ),
+      ],
     );
   }
 }

@@ -7,6 +7,7 @@ import '../../core/providers/layout_provider.dart';
 import '../../core/components/confirm_dialog.dart';
 import '../../core/components/app_notification.dart';
 import '../../core/components/skeleton_loader.dart';
+import '../../core/components/pagination_bar.dart';
 import '../../core/services/base_service.dart';
 import 'components/new_widget_dialog.dart';
 
@@ -26,6 +27,10 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
   int _layoutWidgets = 0;
   int _displayWidgets = 0;
 
+  int _currentPage = 1;
+  final int _pageSize = 10;
+  int _totalPages = 1;
+
   Future<void> _fetchWidgets() async {
     setState(() {
       _isLoading = true;
@@ -33,21 +38,26 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
 
     try {
       final baseService = ref.read(baseServiceProvider);
-      final response = await baseService.listWidgets(page: 1, limit: 100);
+      final response = await baseService.listWidgetsFull(
+        page: _currentPage,
+        limit: _pageSize,
+      );
       
-      if (response != null && mounted) {
-        final data = response as Map<String, dynamic>;
+      if (mounted) {
+        final data = response['data'] as Map<String, dynamic>? ?? {};
+        final meta = response['meta'] as Map<String, dynamic>? ?? {};
         final counts = data['counts'] ?? {};
         final items = data['widgets'] as List<dynamic>? ?? [];
 
         setState(() {
           _widgets.clear();
           _widgets.addAll(items.map((item) => _WidgetData.fromJson(item as Map<String, dynamic>)));
-          _totalWidgets = counts['total'] ?? _widgets.length;
-          _controlWidgets = counts['control'] ?? 0;
-          _inputWidgets = counts['input'] ?? 0;
-          _layoutWidgets = counts['layout'] ?? 0;
-          _displayWidgets = counts['display'] ?? 0;
+          _totalWidgets = (meta['total'] as num?)?.toInt() ?? (counts['total'] as num?)?.toInt() ?? _widgets.length;
+          _totalPages = (meta['totalPages'] as num?)?.toInt() ?? 1;
+          _controlWidgets = (counts['control'] as num?)?.toInt() ?? 0;
+          _inputWidgets = (counts['input'] as num?)?.toInt() ?? 0;
+          _layoutWidgets = (counts['layout'] as num?)?.toInt() ?? 0;
+          _displayWidgets = (counts['display'] as num?)?.toInt() ?? 0;
           _isLoading = false;
         });
       }
@@ -65,6 +75,7 @@ class _WidgetManagementPageState extends ConsumerState<WidgetManagementPage> {
       }
     }
   }
+
 
   void _showCreateWidgetDialog() async {
     final result = await showGeneralDialog<Map<String, dynamic>>(
@@ -664,22 +675,40 @@ class ${widget.name} extends StatelessWidget {
                               ],
                             ),
                           )
-                        : ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _widgets.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              return _WidgetListItem(
-                                data: _widgets[index],
-                                onToggle: () {},
-                                onEdit: () => _showEditWidgetDialog(index),
-                                onDelete: () => _deleteWidget(index),
-                                onDuplicate: () => _duplicateWidget(index),
-                                onViewCode: () => _showCodeDialog(index),
-                                onViewProperties: () => _showPropertiesDialog(index),
-                              );
-                            },
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _widgets.length,
+                                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  return _WidgetListItem(
+                                    data: _widgets[index],
+                                    onToggle: () {},
+                                    onEdit: () => _showEditWidgetDialog(index),
+                                    onDelete: () => _deleteWidget(index),
+                                    onDuplicate: () => _duplicateWidget(index),
+                                    onViewCode: () => _showCodeDialog(index),
+                                    onViewProperties: () => _showPropertiesDialog(index),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              PaginationBar(
+                                currentPage: _currentPage,
+                                totalPages: _totalPages,
+                                totalItems: _totalWidgets,
+                                pageSize: _pageSize,
+                                onPageChanged: (page) {
+                                  setState(() {
+                                    _currentPage = page;
+                                  });
+                                  _fetchWidgets();
+                                },
+                              ),
+                            ],
                           ),
               ],
             ),

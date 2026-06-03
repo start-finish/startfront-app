@@ -316,13 +316,11 @@ class _NewWidgetDialogState extends State<NewWidgetDialog> {
         ),
         const SizedBox(height: 16),
         _buildSectionLabel('Type'),
-        _buildDropdownField(
-          value: _selectedCategory,
-          items: _categories,
+        _buildTypeSelector(
+          selectedCategory: _selectedCategory,
+          categories: _categories,
           onChanged: (val) {
-            if (val != null) {
-              setState(() => _selectedCategory = val);
-            }
+            setState(() => _selectedCategory = val);
           },
         ),
         const SizedBox(height: 16),
@@ -626,6 +624,18 @@ class _NewWidgetDialogState extends State<NewWidgetDialog> {
     );
   }
 
+  Widget _buildTypeSelector({
+    required String selectedCategory,
+    required List<String> categories,
+    required ValueChanged<String> onChanged,
+  }) {
+    return _DialogTypeSelector(
+      selectedCategory: selectedCategory,
+      categories: categories,
+      onChanged: onChanged,
+    );
+  }
+
   Widget _buildInlineButton(String label, {required VoidCallback onTap}) {
     return _DialogInlineButton(
       label: label,
@@ -771,6 +781,116 @@ class _DialogDropdownFieldState extends State<_DialogDropdownField> {
             onChanged: widget.onChanged,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DialogTypeSelector extends StatefulWidget {
+  final String selectedCategory;
+  final List<String> categories;
+  final ValueChanged<String> onChanged;
+
+  const _DialogTypeSelector({
+    required this.selectedCategory,
+    required this.categories,
+    required this.onChanged,
+  });
+
+  @override
+  State<_DialogTypeSelector> createState() => _DialogTypeSelectorState();
+}
+
+class _DialogTypeSelectorState extends State<_DialogTypeSelector> {
+  int? _hoveredIndex;
+
+  IconData _getIconForCategory(String category) {
+    switch (category.toLowerCase()) {
+      case 'control':
+        return Icons.tune_rounded;
+      case 'input':
+        return Icons.edit_rounded;
+      case 'display':
+        return Icons.remove_red_eye_rounded;
+      case 'layout':
+        return Icons.dashboard_rounded;
+      default:
+        return Icons.widgets_rounded;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: List.generate(widget.categories.length, (index) {
+          final category = widget.categories[index];
+          final isSelected = widget.selectedCategory.toLowerCase() == category.toLowerCase();
+          final isHovered = _hoveredIndex == index;
+          final icon = _getIconForCategory(category);
+
+          return MouseRegion(
+            onEnter: (_) => setState(() => _hoveredIndex = index),
+            onExit: (_) => setState(() => _hoveredIndex = null),
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => widget.onChanged(category),
+              child: AnimatedScale(
+                scale: isHovered ? 1.03 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF00B8AC).withValues(alpha: 0.15)
+                        : (isHovered ? Colors.white.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.03)),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isSelected
+                          ? const Color(0xFF00B8AC)
+                          : (isHovered ? Colors.white.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.1)),
+                      width: isSelected ? 2.0 : 1.0,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF00B8AC).withValues(alpha: 0.4),
+                              blurRadius: 10,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        icon,
+                        color: isSelected ? Colors.white : Colors.white60,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        category.toUpperCase(),
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.white60,
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

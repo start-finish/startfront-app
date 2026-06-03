@@ -8,6 +8,7 @@ import '../../core/providers/layout_provider.dart';
 import '../../core/components/confirm_dialog.dart';
 import '../../core/components/app_notification.dart';
 import 'components/new_screen_dialog.dart';
+import '../../core/components/pagination_bar.dart';
 
 class PlatformPage extends ConsumerStatefulWidget {
   const PlatformPage({super.key});
@@ -21,6 +22,9 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
   String _searchQuery = '';
   late List<ScreenData> _screensData;
   final TextEditingController _searchController = TextEditingController();
+
+  int _currentPage = 1;
+  final int _pageSize = 10;
 
   @override
   void initState() {
@@ -91,6 +95,7 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
               icon2: 'assets/icons/chart.svg',
             ),
           );
+          _currentPage = 1;
         });
         AppNotification.show(
           context,
@@ -102,8 +107,7 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
     }
   }
 
-  void _deleteScreen(int index) async {
-    final screen = _screensData[index];
+  void _deleteScreen(ScreenData screen) async {
     final confirmed = await showGeneralDialog<bool>(
       context: context,
       barrierDismissible: true,
@@ -124,7 +128,8 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
 
     if (confirmed == true && mounted) {
       setState(() {
-        _screensData.removeAt(index);
+        _screensData.removeWhere((s) => s.title == screen.title);
+        _currentPage = 1;
       });
       AppNotification.show(
         context,
@@ -146,9 +151,19 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
     }).toList();
   }
 
+  List<ScreenData> get _paginatedScreens {
+    final filtered = _filteredScreens;
+    final startIndex = (_currentPage - 1) * _pageSize;
+    if (startIndex >= filtered.length) {
+      return [];
+    }
+    final endIndex = startIndex + _pageSize;
+    return filtered.sublist(startIndex, endIndex > filtered.length ? filtered.length : endIndex);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filteredScreens = _filteredScreens;
+    final paginatedScreens = _paginatedScreens;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -156,7 +171,7 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Actions Row
-          _buildTopActions(filteredScreens.length),
+          _buildTopActions(_filteredScreens.length),
           const SizedBox(height: 24),
 
           // Cards Grid
@@ -164,7 +179,7 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
             builder: (context, constraints) {
               int crossAxisCount = constraints.maxWidth > 1200 ? 3 : (constraints.maxWidth > 800 ? 2 : 1);
 
-              if (filteredScreens.isEmpty) {
+              if (paginatedScreens.isEmpty) {
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 80),
@@ -182,34 +197,51 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
                 );
               }
 
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 24,
-                  mainAxisSpacing: 24,
-                  childAspectRatio: 1.35,
-                ),
-                itemCount: filteredScreens.length,
-                itemBuilder: (context, index) {
-                  final screen = filteredScreens[index];
-                  return _ScreenCard(
-                    screen: screen,
-                    onStatusToggle: () {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 24,
+                      mainAxisSpacing: 24,
+                      childAspectRatio: 1.35,
+                    ),
+                    itemCount: paginatedScreens.length,
+                    itemBuilder: (context, index) {
+                      final screen = paginatedScreens[index];
+                      return _ScreenCard(
+                        screen: screen,
+                        onStatusToggle: () {
+                          setState(() {
+                            // Find index in master list
+                            final masterIndex = _screensData.indexWhere((s) => s.title == screen.title);
+                            if (masterIndex != -1) {
+                              final s = _screensData[masterIndex];
+                              final newStatus = s.status == 'Published' ? 'Draft' : 'Published';
+                              _screensData[masterIndex] = s.copyWith(status: newStatus);
+                            }
+                          });
+                        },
+                        onDelete: () => _deleteScreen(screen),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  PaginationBar(
+                    currentPage: _currentPage,
+                    totalPages: (_filteredScreens.length / _pageSize).ceil(),
+                    totalItems: _filteredScreens.length,
+                    pageSize: _pageSize,
+                    onPageChanged: (page) {
                       setState(() {
-                        // Find index in master list
-                        final masterIndex = _screensData.indexWhere((s) => s.title == screen.title);
-                        if (masterIndex != -1) {
-                          final s = _screensData[masterIndex];
-                          final newStatus = s.status == 'Published' ? 'Draft' : 'Published';
-                          _screensData[masterIndex] = s.copyWith(status: newStatus);
-                        }
+                        _currentPage = page;
                       });
                     },
-                    onDelete: () => _deleteScreen(index),
-                  );
-                },
+                  ),
+                ],
               );
             },
           ),
@@ -230,6 +262,7 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
       onSelected: (String value) {
         setState(() {
           _selectedStatus = value;
+          _currentPage = 1;
         });
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -336,7 +369,10 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
                     Expanded(
                       child: TextField(
                         controller: _searchController,
-                        onChanged: (value) => setState(() => _searchQuery = value),
+                        onChanged: (value) => setState(() {
+                          _searchQuery = value;
+                          _currentPage = 1;
+                        }),
                         style: const TextStyle(color: Colors.white, fontSize: 13),
                         textAlignVertical: TextAlignVertical.center,
                         decoration: InputDecoration(
@@ -370,7 +406,10 @@ class _PlatformPageState extends ConsumerState<PlatformPage> {
           child: GestureDetector(
             onTap: () {
               _searchController.clear();
-              this.setState(() => _searchQuery = '');
+              this.setState(() {
+                _searchQuery = '';
+                _currentPage = 1;
+              });
             },
             child: AnimatedScale(
               scale: isHovered ? 1.2 : 1.0,
@@ -852,5 +891,104 @@ const _screens = [
     modifiedAt: 'Just now',
     icon1: 'assets/icons/global.svg',
     icon2: 'assets/icons/users.svg',
+  ),
+  ScreenData(
+    title: 'Register',
+    path: '/register',
+    category: 'Auth',
+    status: 'Published',
+    modifiedAt: '2 days ago',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/settings.svg',
+  ),
+  ScreenData(
+    title: 'Settings',
+    path: '/settings',
+    category: 'Main',
+    status: 'Draft',
+    modifiedAt: '5 hours ago',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/settings.svg',
+  ),
+  ScreenData(
+    title: 'Analytics',
+    path: '/analytics',
+    category: 'Main',
+    status: 'Published',
+    modifiedAt: 'Yesterday',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/chart.svg',
+  ),
+  ScreenData(
+    title: 'Users List',
+    path: '/users',
+    category: 'Admin',
+    status: 'Published',
+    modifiedAt: 'Just now',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/users.svg',
+  ),
+  ScreenData(
+    title: 'Widget Presets',
+    path: '/presets',
+    category: 'Tool',
+    status: 'Draft',
+    modifiedAt: '3 days ago',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/action.svg',
+  ),
+  ScreenData(
+    title: 'Permissions',
+    path: '/permissions',
+    category: 'Admin',
+    status: 'Published',
+    modifiedAt: 'Yesterday',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/users.svg',
+  ),
+  ScreenData(
+    title: 'Billing Info',
+    path: '/billing',
+    category: 'User',
+    status: 'Draft',
+    modifiedAt: '4 days ago',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/settings.svg',
+  ),
+  ScreenData(
+    title: 'DB Inspector',
+    path: '/database',
+    category: 'Tool',
+    status: 'Published',
+    modifiedAt: '6 days ago',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/action.svg',
+  ),
+  ScreenData(
+    title: 'Server Status',
+    path: '/server',
+    category: 'Admin',
+    status: 'Published',
+    modifiedAt: '2 hours ago',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/chart.svg',
+  ),
+  ScreenData(
+    title: 'User Guide',
+    path: '/guide',
+    category: 'User',
+    status: 'Draft',
+    modifiedAt: '1 week ago',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/settings.svg',
+  ),
+  ScreenData(
+    title: 'Notifications Feed',
+    path: '/notifications',
+    category: 'User',
+    status: 'Published',
+    modifiedAt: 'Just now',
+    icon1: 'assets/icons/global.svg',
+    icon2: 'assets/icons/action.svg',
   ),
 ];

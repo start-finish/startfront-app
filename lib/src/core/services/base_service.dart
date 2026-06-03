@@ -47,6 +47,14 @@ class BaseService {
     });
   }
 
+  Future<Map<String, dynamic>> listUsersFull({int page = 1, int limit = 10, String search = ''}) {
+    return _client.postFull('USERS_list', {
+      'page': page,
+      'limit': limit,
+      'search': search,
+    });
+  }
+
   Future<dynamic> createUser({
     required String username,
     required String email,
@@ -94,6 +102,14 @@ class BaseService {
   // --- ROLE SERVICES ---
   Future<dynamic> listRoles({int page = 1, int limit = 50, String search = ''}) {
     return _client.post('ROLES_list', {
+      'page': page,
+      'limit': limit,
+      'search': search,
+    });
+  }
+
+  Future<Map<String, dynamic>> listRolesFull({int page = 1, int limit = 50, String search = ''}) {
+    return _client.postFull('ROLES_list', {
       'page': page,
       'limit': limit,
       'search': search,
@@ -169,6 +185,14 @@ class BaseService {
   // --- WIDGET SERVICES ---
   Future<dynamic> listWidgets({int page = 1, int limit = 50, String search = ''}) {
     return _client.post('WIDGETS_list', {
+      'page': page,
+      'limit': limit,
+      'search': search,
+    });
+  }
+
+  Future<Map<String, dynamic>> listWidgetsFull({int page = 1, int limit = 50, String search = ''}) {
+    return _client.postFull('WIDGETS_list', {
       'page': page,
       'limit': limit,
       'search': search,
